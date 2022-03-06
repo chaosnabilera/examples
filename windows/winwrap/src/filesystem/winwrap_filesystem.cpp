@@ -26,7 +26,7 @@ bool WinPath::is_dirW(wstring& path) {
 	return (fattr != INVALID_FILE_ATTRIBUTES) && (fattr & FILE_ATTRIBUTE_DIRECTORY);
 }
 
-string WinPath::cwdA() {
+string WinPath::get_cwdA() {
 	DWORD reqlen = GetCurrentDirectoryA(0, NULL);
 	char* wd = new char[reqlen];
 	GetCurrentDirectoryA(reqlen, wd);
@@ -35,13 +35,48 @@ string WinPath::cwdA() {
 	return ret;
 }
 
-wstring WinPath::cwdW() {
+wstring WinPath::get_cwdW() {
 	DWORD reqlen = GetCurrentDirectoryW(0, NULL);
 	WCHAR* wd = new WCHAR[reqlen];
 	GetCurrentDirectoryW(reqlen, wd);
 	wstring ret(wd);
 	delete[] wd;
 	return ret;
+}
+
+bool WinPath::set_cwdA(string& path) {
+	bool res = false;
+	do {
+		if (!is_dirA(path)) {
+			dprintf("%s is not a directory", path.c_str());
+			break;
+		}
+		if (!SetCurrentDirectoryA(path.c_str())) {
+			dprintf("SetCurrentDirectoryA(%s) failed: %d", GetLastError());
+			break;
+		}
+		res = true;
+	} while (0);
+
+	return res;
+}
+
+bool WinPath::set_cwdW(wstring& path) {
+	bool res = false;
+
+	do {
+		if (!is_dirW(path)) {
+			dprintf("%S is not a directory", path.c_str());
+			break;
+		}
+		if (!SetCurrentDirectoryW(path.c_str())) {
+			dprintf("SetCurrentDirectoryW(%S) failed : %d", GetLastError());
+			break;
+		}
+		res = true;
+	} while (0);
+
+	return res;
 }
 
 bool WinPath::listdirW(wstring& dir, vector<wstring>& res) {
@@ -100,4 +135,56 @@ bool WinPath::listdirA(string& dir, vector<string>& res) {
 	} while (0);
 
 	return success;
+}
+
+bool WinPath::get_abspathW(wstring& in, wstring& out) {
+	DWORD bufsize = 0;
+	DWORD copycnt = 0;
+	WCHAR* wbuf = nullptr;
+	WCHAR* filepart = nullptr;
+	bool res = false;
+	do {
+		if ((bufsize = GetFullPathNameW(in.c_str(), 0, wbuf, &filepart)) == 0) {
+			dprintf("GetFullPathNameW(%S) failed to get bufsize: %d", in.c_str(), GetLastError());
+			break;
+		}
+		wbuf = new WCHAR[bufsize];
+		if ((copycnt = GetFullPathNameW(in.c_str(), bufsize, wbuf, &filepart)) == 0) {
+			dprintf("GetFullPathNameW(%S) failed : %d", in.c_str(), GetLastError());
+			break;
+		}
+		out = wbuf;
+		res = true;
+	} while (0);
+
+	if (wbuf)
+		delete[] wbuf;
+
+	return res;
+}
+
+bool WinPath::get_abspathA(string& in, string& out) {
+	DWORD bufsize = 0;
+	DWORD copycnt = 0;
+	char* buf = nullptr;
+	char* filepart = nullptr;
+	bool res = false;
+	do {
+		if ((bufsize = GetFullPathNameA(in.c_str(), 0, buf, &filepart)) == 0) {
+			dprintf("GetFullPathNameA(%s) failed to get bufsize: %d", in.c_str(), GetLastError());
+			break;
+		}
+		buf = new char[bufsize];
+		if ((copycnt = GetFullPathNameA(in.c_str(), bufsize, buf, &filepart)) == 0) {
+			dprintf("GetFullPathNameA(%s) failed : %d", in.c_str(), GetLastError());
+			break;
+		}
+		out = buf;
+		res = true;
+	} while (0);
+
+	if (buf)
+		delete[] buf;
+
+	return res;
 }
