@@ -38,7 +38,7 @@ void echo_client(char* server_addr, char* server_port){
 
 		// Resolve the server address and port
 		if((res = getaddrinfo(server_addr, server_port, &hints, &resolved_addr)) != ERROR_SUCCESS){
-			printf("getaddrinfo failed with error: %d\n", res);
+			printf("getaddrinfo failed with error: %d\n", res); break;
 		}		
 
 		// Attempt to connect to an address until one succeeds
