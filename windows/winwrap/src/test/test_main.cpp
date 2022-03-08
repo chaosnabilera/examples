@@ -10,52 +10,34 @@
 
 using namespace std;
 
-void navigate_filesystemW() {
-	WCHAR iline[0x100];
-	wstring icmd, iarg;
-
-	printf("Shell!\n");
-	
-	while (true) {
-		scanf("%S", iline);
-		icmd = iline;
-		if (icmd == L"exit") {
-			break;
-		}
-		else if (icmd == L"cd") {
-			scanf("%S", iline);
-			iarg = iline;
-			if (!WinPath::set_cwdW(iarg)) {
-				printf("WinPath::set_cwdW(%S) failed\n", iarg.c_str());
-				continue;
-			}
-		}
-		else if (icmd == L"cwd") {
-			printf("%S\n", WinPath::get_cwdW().c_str());
-		}
-		else if (icmd == L"ls") {
-			vector<wstring> res;
-			wstring cur = L".";
-			if (!WinPath::listdirW(cur, res)) {
-				printf("WinPath::listdirW(%S) failed\n", cur.c_str());
-				continue;
-			}
-			for (auto& w : res) {
-				printf("(%u)",w.size());
-				wcout << w;
-				printf("\n");
-			}
-			printf("%lu files\n", res.size());
-		}
-	}
-}
-
+void navigate_filesystemW();
+void run_echoclient(string server_addr, string server_port);
+void run_echoserver(string server_addr, string server_port);
 
 int main(int argc, char** argv) {
+	vector<string> arg;
+
 	// unicode characters won't be properly displayed if we omit these
 	setlocale(LC_ALL, ".65001");    // for multi-byte
 	_wsetlocale(LC_ALL, L".65001"); // for unicode
 
-	navigate_filesystemW();
+	for (int i = 0; i < argc; ++i)
+		arg.push_back(argv[i]);
+
+	if (arg.size() == 2 && arg[1] == "fs") {
+		navigate_filesystemW();
+	}
+	else if (arg.size() == 4 && arg[1] == "echoclient") {
+		run_echoclient(arg[2], arg[3]);
+	}
+	else if (arg.size() == 4 && arg[1] == "echoserver") {
+		run_echoserver(arg[2], arg[3]);
+	}
+	else {
+		printf("Usage 1: %s fs\n", arg[0].c_str());
+		printf("Usage 2: %s echoclient <server address> <server port>\n", arg[0].c_str());
+		printf("Usage 3: %s echoserver <listen address> <listen port>\n", arg[0].c_str());
+	}
+	
 	return 0;
 }

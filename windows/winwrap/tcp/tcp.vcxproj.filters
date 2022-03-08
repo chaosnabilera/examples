@@ -15,7 +15,16 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\tcp\winwrap_tcp.cpp">
+    <ClCompile Include="..\src\tcp\wintcp.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tcp\sock.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tcp\winacceptsock.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tcp\winsock.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
