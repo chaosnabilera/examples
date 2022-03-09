@@ -9,25 +9,35 @@
 
 using namespace std;
 
-WinSock::WinSock(SOCKET _sock, sockaddr _addr, bool _is_blocking) {
+WinSock::WinSock(SOCKET _sock, sockaddr* _addr, bool _is_blocking) {
+	char ipstr[INET6_ADDRSTRLEN] = { 0 };
+	memset(addr, 0, sizeof(addr));
 	sock = _sock;
-	addr = _addr;
 	is_blocking = _is_blocking;
 
 	if (sock == INVALID_SOCKET)
 		return;
 	if (!switch_blocking_mode(is_blocking, true))
 		close();
-
-	char ipstr[INET_ADDRSTRLEN];
-	struct sockaddr_in* sin = (struct sockaddr_in*) & addr;
-	if (sin->sin_family != AF_INET) {
-		dprintf("only ipv4 is supported");
-		close();
+	
+	int sin_family = ((struct sockaddr_in*)_addr)->sin_family;
+	if (sin_family == AF_INET) {
+		struct sockaddr_in* sin = (struct sockaddr_in*)addr;
+		memcpy(addr, _addr, sizeof(sockaddr_in));
+		inet_ntop(AF_INET, &(sin->sin_addr), ipstr, sizeof(ipstr));
+		ip = ipstr;
+		port = htons(sin->sin_port);
 	}
-	inet_ntop(AF_INET, &(sin->sin_addr), ipstr, sizeof(ipstr));
-	ip = ipstr;
-	port = htons(sin->sin_port);
+	else if (sin_family == AF_INET6) {
+		struct sockaddr_in6* sin6 = (struct sockaddr_in6*)addr;
+		memcpy(addr, _addr, sizeof(sockaddr_in6));
+		inet_ntop(AF_INET6, &(sin6->sin6_addr), ipstr, sizeof(ipstr));
+		ip = ipstr;
+		port = htons(sin6->sin6_port);
+	}
+	else {
+		dprintf("Unknown sin_family:%d", sin_family);
+	}
 }
 
 WinSock::~WinSock() {
@@ -139,6 +149,9 @@ bool WinSock::recv_all_nonblock(size_t recvlen, char* buf, size_t buflen, int ti
 				recvcnt += recvres;
 			}
 		}
+		if (GetTickCount64() - tbeg >= timeout_ms) {
+			dprintf("[recv_all_nonblock] Timeout occurred!");
+		}
 		success = (recvcnt == recvlen);
 	} while (0);
 
@@ -179,6 +192,9 @@ bool WinSock::send_all_nonblock(size_t sendlen, char* buf, size_t buflen, int ti
 			else {
 				sendcnt += sendres;
 			}
+		}
+		if (GetTickCount64() - tbeg >= timeout_ms) {
+			dprintf("[send_all_nonblock] Timeout occurred!");
 		}
 		success = (sendcnt == sendlen);
 	} while (0);

@@ -39,7 +39,7 @@ WinSock* WinTCP::tcp_connect(string server_addr, string service_port, bool block
 
 	struct addrinfo* res_addr = nullptr;
 	struct addrinfo hints = { 0 };
-	sockaddr client_addr = { 0 };
+	char client_addr[sizeof(sockaddr_in6)] = { 0 };
 
 	int ires = 0;
 
@@ -68,7 +68,7 @@ WinSock* WinTCP::tcp_connect(string server_addr, string service_port, bool block
 				sock_conn = INVALID_SOCKET;
 				continue;
 			}
-			client_addr = *(ptr->ai_addr);
+			memcpy(client_addr, ptr->ai_addr, ptr->ai_addrlen);
 			break;
 		}
 
@@ -82,7 +82,7 @@ WinSock* WinTCP::tcp_connect(string server_addr, string service_port, bool block
 		freeaddrinfo(res_addr);
 
 	if (sock_conn != INVALID_SOCKET) {
-		winsock = new WinSock(sock_conn, client_addr ,blocking);
+		winsock = new WinSock(sock_conn, (sockaddr*)client_addr, blocking);
 	}
 
 	return winsock;
@@ -97,7 +97,7 @@ WinAcceptSock* WinTCP::tcp_create_listener(std::string server_addr, std::string 
 	int ires = 0;
 	bool success = false;
 
-	hints.ai_family = AF_INET;
+	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 	hints.ai_flags = AI_PASSIVE;
@@ -105,7 +105,7 @@ WinAcceptSock* WinTCP::tcp_create_listener(std::string server_addr, std::string 
 	do {
 		// Resolve the server address and port
 		if ((ires = getaddrinfo(server_addr.c_str(), service_port.c_str(), &hints, &res_addr)) != 0) {
-			printf("getaddrinfo failed with error: %d\n", ires);
+			printf("[tcp_create_listener] getaddrinfo failed with error: %d\n", ires);
 			break;
 		}
 		// Create a SOCKET for connecting to server

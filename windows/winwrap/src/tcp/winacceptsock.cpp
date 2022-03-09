@@ -27,8 +27,8 @@ WinSock* WinAcceptSock::accept_block() {
 	SOCKET sock_client = INVALID_SOCKET;
 	WinSock* winsock = nullptr;
 	bool success = false;
-	sockaddr client_addr = { 0 };
-	int client_addr_len = sizeof(sockaddr);
+	char client_addr[sizeof(sockaddr_in6)];
+	int client_addr_len = sizeof(client_addr);
 
 	do {
 		if (sock == INVALID_SOCKET) {
@@ -39,7 +39,7 @@ WinSock* WinAcceptSock::accept_block() {
 			dprintf("[accept_block] Failed to change socket to blocking mode");
 			break;
 		}
-		if ((sock_client = accept(sock, &client_addr, &client_addr_len)) == INVALID_SOCKET) {
+		if ((sock_client = accept(sock, (sockaddr*)client_addr, &client_addr_len)) == INVALID_SOCKET) {
 			dprintf("[accept_block] accept failed with error: %d", WSAGetLastError());
 			break;
 		}
@@ -47,7 +47,7 @@ WinSock* WinAcceptSock::accept_block() {
 	} while (0);
 
 	if (success) {
-		winsock = new WinSock(sock_client, client_addr, true);
+		winsock = new WinSock(sock_client, (sockaddr*)client_addr, true);
 	}
 	else {
 		close();
@@ -60,8 +60,8 @@ bool WinAcceptSock::accept_nonblock(WinSock*& res) {
 	SOCKET sock_client = INVALID_SOCKET;
 	WinSock* winsock = nullptr;
 	bool success = false;
-	sockaddr client_addr = { 0 };
-	int client_addr_len = sizeof(sockaddr);
+	char client_addr[sizeof(sockaddr_in6)];
+	int client_addr_len = sizeof(client_addr);
 	DWORD err = 0;
 
 	do {
@@ -73,7 +73,7 @@ bool WinAcceptSock::accept_nonblock(WinSock*& res) {
 			dprintf("Failed to change socket to non-blocking mode");
 			break;
 		}
-		if ((sock_client = accept(sock, &client_addr, &client_addr_len)) == INVALID_SOCKET) {
+		if ((sock_client = accept(sock, (sockaddr*)client_addr, &client_addr_len)) == INVALID_SOCKET) {
 			if ((err = WSAGetLastError()) != WSAEWOULDBLOCK) {
 				dprintf("Failed to accept with error other than WSAEWOULDBLOCK : %d", err);
 				break;
@@ -84,7 +84,7 @@ bool WinAcceptSock::accept_nonblock(WinSock*& res) {
 
 	if (success) {
 		if (sock_client != INVALID_SOCKET)
-			res = new WinSock(sock_client, client_addr, false);
+			res = new WinSock(sock_client, (sockaddr*)client_addr, false);
 		else
 			res = nullptr;
 	}

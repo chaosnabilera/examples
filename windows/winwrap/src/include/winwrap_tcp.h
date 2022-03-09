@@ -61,8 +61,8 @@ public:
 	std::string get_ip();
 	uint16_t get_port();
 private:
-	WinSock(SOCKET sock, sockaddr addr, bool is_blocking);
-	sockaddr addr;
+	WinSock(SOCKET sock, sockaddr* addr, bool is_blocking);
+	char addr[0x20]; // sizeof(sockaddr_in6) = 28 < 32
 	std::string ip;
 	uint16_t port;
 };

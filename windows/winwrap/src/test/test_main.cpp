@@ -11,8 +11,16 @@
 using namespace std;
 
 void navigate_filesystemW();
-void run_echoclient(string server_addr, string server_port);
-void run_echoserver(string server_addr, string server_port);
+void run_echoclient_blockio(string server_addr, string server_port);
+void run_echoclient_nonblockio(string server_addr, string server_port);
+void run_echoserver_blockio(string server_addr, string server_port);
+void run_echoserver_nonblockio(string server_addr, string server_port);
+
+void print_usage(vector<string>& arg) {
+	printf("Usage 1: %s fs\n", arg[0].c_str());
+	printf("Usage 2: %s echoclient [block/nonblock] <server address> <server port>\n", arg[0].c_str());
+	printf("Usage 3: %s echoserver [block/nonblock]  <listen address> <listen port>\n", arg[0].c_str());
+}
 
 int main(int argc, char** argv) {
 	vector<string> arg;
@@ -27,16 +35,30 @@ int main(int argc, char** argv) {
 	if (arg.size() == 2 && arg[1] == "fs") {
 		navigate_filesystemW();
 	}
-	else if (arg.size() == 4 && arg[1] == "echoclient") {
-		run_echoclient(arg[2], arg[3]);
+	else if (arg.size() == 5 && arg[1] == "echoclient") {
+		if (arg[2] == "block") {
+			run_echoclient_blockio(arg[3], arg[4]);
+		}
+		else if(arg[2] =="nonblock") {
+			run_echoclient_blockio(arg[3], arg[4]);
+		}
+		else {
+			print_usage(arg);
+		}
 	}
-	else if (arg.size() == 4 && arg[1] == "echoserver") {
-		run_echoserver(arg[2], arg[3]);
+	else if (arg.size() == 5 && arg[1] == "echoserver") {
+		if (arg[2] == "block") {
+			run_echoserver_blockio(arg[3], arg[4]);
+		}
+		else if (arg[2] == "nonblock") {
+			run_echoserver_nonblockio(arg[3], arg[4]);
+		}
+		else {
+			print_usage(arg);
+		}
 	}
 	else {
-		printf("Usage 1: %s fs\n", arg[0].c_str());
-		printf("Usage 2: %s echoclient <server address> <server port>\n", arg[0].c_str());
-		printf("Usage 3: %s echoserver <listen address> <listen port>\n", arg[0].c_str());
+		print_usage(arg);
 	}
 	
 	return 0;
