@@ -7,6 +7,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "winwrap.vcxproj", "
 	ProjectSection(ProjectDependencies) = postProject
 		{2BBCB05C-2B05-49BC-8F35-2AC8445966D9} = {2BBCB05C-2B05-49BC-8F35-2AC8445966D9}
 		{E4B82191-D49E-49F4-BD3B-D2F75B511215} = {E4B82191-D49E-49F4-BD3B-D2F75B511215}
+		{ADBD55A4-304D-4DF1-845F-6254E0286B98} = {ADBD55A4-304D-4DF1-845F-6254E0286B98}
 		{65F57FD1-810C-499F-95F1-4623247594DA} = {65F57FD1-810C-499F-95F1-4623247594DA}
 	EndProjectSection
 EndProject
@@ -15,6 +16,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winwrap_encoding", "encoding\encoding.vcxproj", "{2BBCB05C-2B05-49BC-8F35-2AC8445966D9}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winwrap_tcp", "tcp\tcp.vcxproj", "{65F57FD1-810C-499F-95F1-4623247594DA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winwrap_wincrypt", "wincrypt\wincrypt.vcxproj", "{ADBD55A4-304D-4DF1-845F-6254E0286B98}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -56,6 +59,14 @@ Global
 		{65F57FD1-810C-499F-95F1-4623247594DA}.Release|x64.Build.0 = Release|x64
 		{65F57FD1-810C-499F-95F1-4623247594DA}.Release|x86.ActiveCfg = Release|Win32
 		{65F57FD1-810C-499F-95F1-4623247594DA}.Release|x86.Build.0 = Release|Win32
+		{ADBD55A4-304D-4DF1-845F-6254E0286B98}.Debug|x64.ActiveCfg = Debug|x64
+		{ADBD55A4-304D-4DF1-845F-6254E0286B98}.Debug|x64.Build.0 = Debug|x64
+		{ADBD55A4-304D-4DF1-845F-6254E0286B98}.Debug|x86.ActiveCfg = Debug|Win32
+		{ADBD55A4-304D-4DF1-845F-6254E0286B98}.Debug|x86.Build.0 = Debug|Win32
+		{ADBD55A4-304D-4DF1-845F-6254E0286B98}.Release|x64.ActiveCfg = Release|x64
+		{ADBD55A4-304D-4DF1-845F-6254E0286B98}.Release|x64.Build.0 = Release|x64
+		{ADBD55A4-304D-4DF1-845F-6254E0286B98}.Release|x86.ActiveCfg = Release|Win32
+		{ADBD55A4-304D-4DF1-845F-6254E0286B98}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

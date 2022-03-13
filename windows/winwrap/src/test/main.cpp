@@ -1,16 +1,13 @@
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include <locale.h>
-
-#include "winwrap_encoding.h"
-#include "winwrap_filesystem.h"
-
-//#include "dprintf.hpp"
 
 using namespace std;
 
 void navigate_filesystemW();
+void copy_file(string src, string dst);
 void run_echoclient_blockio(string server_addr, string server_port);
 void run_echoclient_nonblockio(string server_addr, string server_port);
 void run_echoserver_blockio(string server_addr, string server_port);
@@ -34,6 +31,9 @@ int main(int argc, char** argv) {
 
 	if (arg.size() == 2 && arg[1] == "fs") {
 		navigate_filesystemW();
+	}
+	else if (arg.size() == 4 && arg[1] == "copy") {
+		copy_file(arg[2], arg[3]);
 	}
 	else if (arg.size() == 5 && arg[1] == "echoclient") {
 		if (arg[2] == "block") {

@@ -188,3 +188,67 @@ bool WinPath::get_abspathA(string& in, string& out) {
 
 	return res;
 }
+
+WinFile* WinPath::open_fileA(string& path, string mode) {
+	wstring wpath(path.begin(), path.end());
+	wstring wmode(mode.begin(), mode.end());
+	return open_fileW(wpath, wmode);
+}
+
+WinFile* WinPath::open_fileW(wstring& path, wstring mode) {
+	WinFile* new_winfile = nullptr;
+	HANDLE hfile = INVALID_HANDLE_VALUE;
+	DWORD err;
+	wstring abspath;
+
+	DWORD desiredaccess;
+	DWORD sharemode;
+	DWORD creationdisposition;
+
+	do {
+		if (mode == L"r") {
+			desiredaccess = GENERIC_READ; sharemode = FILE_SHARE_READ; creationdisposition = OPEN_EXISTING;
+		}
+		else if (mode == L"r+") {
+			desiredaccess = GENERIC_READ | GENERIC_WRITE; sharemode = 0; creationdisposition = OPEN_EXISTING;
+		}
+		else if (mode == L"w") {
+			desiredaccess = GENERIC_WRITE; sharemode = 0; creationdisposition = CREATE_ALWAYS;
+		}
+		else if (mode == L"w+") {
+			desiredaccess = GENERIC_READ | GENERIC_WRITE; sharemode = 0; creationdisposition = CREATE_ALWAYS;
+		}
+		else if (mode == L"a") {
+			desiredaccess = GENERIC_WRITE; sharemode = 0; creationdisposition = OPEN_ALWAYS;
+		}
+		else if (mode == L"a+") {
+			desiredaccess = GENERIC_READ | GENERIC_WRITE; sharemode = 0; creationdisposition = OPEN_ALWAYS;
+		}
+		else if (mode == L"rw") { // custom
+			desiredaccess = GENERIC_READ | GENERIC_WRITE; sharemode = 0; creationdisposition = OPEN_ALWAYS;
+		}
+		else {
+			dprintf("[WinPath::open_fileW] Invalid open mode: %S", mode.c_str());
+			break;
+		}
+
+		if ((hfile = CreateFileW(path.c_str(), desiredaccess, sharemode, NULL, creationdisposition, FILE_ATTRIBUTE_NORMAL, NULL)) == INVALID_HANDLE_VALUE) {
+			err = GetLastError();
+			dprintf("[WinPath::open_fileW] CreateFileW (%S,%S) failed with %d(0x%08X)", path.c_str(), mode.c_str(), err, err);
+			break;
+		}
+	} while (0);
+
+	if (hfile != INVALID_HANDLE_VALUE) {
+		new_winfile = new WinFile(hfile, mode);
+		if (mode[0] == L'a') {
+			if (!(new_winfile->setpos_end())) {
+				dprintf("[WinPath::open_fileW] failed to set pointer at end for mode: %S)", mode.c_str());
+				delete new_winfile;
+				new_winfile = nullptr;
+			}
+		}
+	}
+
+	return new_winfile;
+}

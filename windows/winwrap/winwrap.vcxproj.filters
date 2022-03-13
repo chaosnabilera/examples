@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\test\test_main.cpp">
+    <ClCompile Include="src\test\main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="src\test\test_echoclient.cpp">
@@ -25,6 +25,9 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="src\test\test_filesystem.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="src\test\test_wincrypt.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
