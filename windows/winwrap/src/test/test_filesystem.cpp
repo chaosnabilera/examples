@@ -51,7 +51,6 @@ void navigate_filesystemW() {
 void copy_file(string src, string dst) {
 	WinFile* ifile = nullptr;
 	WinFile* ofile = nullptr;
-	shared_ptr<BYTE> empty;
 	shared_ptr<BYTE> ifile_content;
 	long long ifile_content_size = 0;
 
@@ -66,7 +65,7 @@ void copy_file(string src, string dst) {
 		}
 
 		ifile_content = ifile->read_all(ifile_content_size);
-		if (ifile_content == empty) {
+		if (!ifile_content) {
 			printf("failed to read_all %s\n", src.c_str());
 			break;
 		}

@@ -30,7 +30,7 @@ WinCryptAES::WinCryptAES() : hcrptprv(NULL), hkey(NULL) {
 	}
 }
 
-WinCryptAES::WinCryptAES(char* keybuf, int keybuflen, BYTE* iv, AesMode mode) {
+WinCryptAES::WinCryptAES(char* keybuf, int keybuflen, BYTE* iv, AesMode mode) : hcrptprv(NULL), hkey(NULL) {
 	bool success = false;
 	do {
 		if (!get_aes_crypt_provider()) {
@@ -109,8 +109,8 @@ DWORD WinCryptAES::encrypt(BYTE* target, DWORD target_len, DWORD target_buflen, 
 			dprintf("Failed to determine size of resulting aes crypto");
 			break;
 		}
-		if (target_buflen < encrypt_result) {
-			dprintf("target_buflen:%d < required_len:%d", target_buflen, required_len);
+		if (target_buflen < required_len) {
+			dprintf("target_buflen:%u < required_len:%u", target_buflen, required_len);
 			break;
 		}
 		encrypt_result = target_len;

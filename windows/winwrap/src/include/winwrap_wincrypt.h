@@ -20,7 +20,7 @@ public:
 
 	// note that once we encrypt, we can't decrypt with it and vice versa
 	// return non-zero on success
-	DWORD encrypt(BYTE* target, DWORD target_len, DWORD target_buflen, BOOL finalize); 
+	DWORD encrypt(BYTE* target, DWORD target_len, DWORD target_buflen, BOOL finalize);
 	DWORD decrypt(BYTE* target, DWORD target_len, BOOL finalize); 
 private:
 	HCRYPTPROV hcrptprv;
