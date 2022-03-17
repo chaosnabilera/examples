@@ -25,14 +25,14 @@ bool Sock::can_read() {
 	TIMEVAL immediate = { 0,0 };
 	fd_set fds;
 
-	FD_ZERO(&fds);
-	FD_SET(sock, &fds);
-
 	if (sock == INVALID_SOCKET)
 		return false;
 
+	FD_ZERO(&fds);
+	FD_SET(sock, &fds);
+
 	if ((sres = select(0, &fds, nullptr, nullptr, &immediate)) == SOCKET_ERROR) {
-		dprintf("Error occurred during can_read select");
+		dprintf("Error occurred during can_read select : %d",WSAGetLastError());
 		close();
 	}
 
@@ -44,14 +44,14 @@ bool Sock::can_write() {
 	TIMEVAL immediate = { 0,0 };
 	fd_set fds;
 
-	FD_ZERO(&fds);
-	FD_SET(sock, &fds);
-
 	if (sock == INVALID_SOCKET)
 		return false;
 
+	FD_ZERO(&fds);
+	FD_SET(sock, &fds);
+
 	if ((sres = select(0, nullptr, &fds, nullptr, &immediate)) == SOCKET_ERROR) {
-		dprintf("Error occurred during can_write select");
+		dprintf("Error occurred during can_write select : %d",WSAGetLastError());
 		close();
 	}
 
