@@ -4,17 +4,17 @@
 
 using namespace std;
 
-SerializableStringDict::SerializableStringDict(bool vld) : 
-attribute(0), content(nullptr), contentlen(0), is_valid(vld) { }
+SerializableStringDict::SerializableStringDict(string nm, bool vld) : 
+attribute(0), name_str(nm), content(nullptr), contentlen(0), is_valid(vld) { }
 
 SerializableStringDict::~SerializableStringDict() { }
 
 SerializableStringDict::SerializableStringDict(const SerializableStringDict& rhs) :
-	attribute(rhs.attribute), name_string(rhs.name_string), content(rhs.content),
+	attribute(rhs.attribute), name_str(rhs.name_str), content(rhs.content),
 	contentlen(rhs.contentlen), children(rhs.children), is_valid(rhs.is_valid) { }
 
 string SerializableStringDict::name() {
-	return name_string;
+	return name_str;
 }
 
 char* SerializableStringDict::raw_content() {
@@ -49,6 +49,28 @@ void SerializableStringDict::set_content(char* src, size_t srclen) {
 	memcpy(content.get(), src, contentlen);
 }
 
+void SerializableStringDict::print(int lv) {
+	for (int i = 0; i < lv; ++i)
+		printf("\t");
+	printf("[%s]", name_str.c_str());
+
+	if (attribute & ATTRIBUTE_CONTAINER) {
+		printf("[container : %zu items]\n", children.size());
+		for (auto& p : children) {
+			SerializableStringDict& child = *(p.second.get());
+			child.print(lv + 1);
+		}
+	}
+	else {
+		shared_ptr<char> print_buf(new char[contentlen + 1], default_delete<char[]>());
+		memcpy(print_buf.get(), content.get(), contentlen);
+		print_buf.get()[contentlen] = '\0';
+
+		printf("[content : %llu bytes]", contentlen);
+		printf("[%s]\n", print_buf.get());
+	}
+}
+
 SerializableStringDict::operator bool() const {
 	return is_valid;
 }
@@ -71,7 +93,7 @@ SerializableStringDict& SerializableStringDict::operator[](std::string key) {
 	}
 
 	if (children.find(key) == children.end()) {
-		children[key] = std::shared_ptr<SerializableStringDict>(new SerializableStringDict(true));
+		children[key] = std::shared_ptr<SerializableStringDict>(new SerializableStringDict(key, true));
 	}
 
 	return *(children[key].get());
@@ -122,9 +144,9 @@ shared_ptr< SerializableStringDict> SerializableStringDict::deserialize_data(cha
 		return empty;
 	}
 
-	attribute = *(unsigned int*)buf[0];
-	namelen = *(unsigned int*)buf[4];
-	contentlen = *(unsigned long long*)buf[8];
+	attribute = *(unsigned int*)(&buf[0]);
+	namelen = *(unsigned int*)(&buf[ATTRIBUTE_BYTESIZE]);
+	contentlen = *(unsigned long long*)(&buf[ATTRIBUTE_BYTESIZE+NAMELENGTH_BYTESIZE]);
 
 	if (namelen == 0) {
 		dprintf("nameless dict is not allowed");
@@ -176,14 +198,14 @@ shared_ptr< SerializableStringDict> SerializableStringDict::deserialize_data(cha
 size_t SerializableStringDict::serialized_length() {
 	size_t total_length = 0;
 	if (attribute & ATTRIBUTE_CONTAINER) {
-		total_length = HEADER_BYTESIZE + name_string.size();
+		total_length = HEADER_BYTESIZE + name_str.size();
 		for (auto& p : children) {
 			SerializableStringDict& child = *(p.second.get());
 			total_length += child.serialized_length();
 		}
 	}
 	else {
-		total_length = HEADER_BYTESIZE + name_string.size() + contentlen;
+		total_length = HEADER_BYTESIZE + name_str.size() + contentlen;
 	}
 	return total_length;
 }
@@ -197,31 +219,30 @@ shared_ptr<char> SerializableStringDict::serialize() {
 
 void SerializableStringDict::rec_serialize(char* buf, size_t buflen) {
 	*(unsigned int*)(&buf[0]) = attribute;
-	*(unsigned int*)(&buf[ATTRIBUTE_BYTESIZE]) = name_string.size();
+	*(unsigned int*)(&buf[ATTRIBUTE_BYTESIZE]) = name_str.size();
+	memcpy(&buf[HEADER_BYTESIZE], name_str.c_str(), name_str.size());
 
 	if (attribute & ATTRIBUTE_CONTAINER) {
-		size_t offset = HEADER_BYTESIZE + name_string.size();
+		size_t offset = HEADER_BYTESIZE + name_str.size();
 		size_t contentlen = 0;
 		for (auto& p : children) {
 			SerializableStringDict& child = *(p.second.get());
 			size_t childlen = child.serialized_length();
-			rec_serialize(buf + offset, childlen);
+			child.rec_serialize(buf + offset, childlen);
 			offset += childlen;
 			contentlen += childlen;
 		}
 		*(unsigned long long*)(&buf[ATTRIBUTE_BYTESIZE + NAMELENGTH_BYTESIZE]) = contentlen;
-		memcpy(&buf[HEADER_BYTESIZE], name_string.c_str(), name_string.size());		
 	}
 	else {
 		*(unsigned long long*)(&buf[ATTRIBUTE_BYTESIZE + NAMELENGTH_BYTESIZE]) = contentlen;
-		memcpy(&buf[HEADER_BYTESIZE], name_string.c_str(), name_string.size());
-		memcpy(&buf[HEADER_BYTESIZE + name_string.size()], content.get(), contentlen);
+		memcpy(&buf[HEADER_BYTESIZE + name_str.size()], content.get(), contentlen);
 	}
 }
 
 // Only deserialize_data can call this
 SerializableStringDict::SerializableStringDict(unsigned int attr, std::string& nm, char* cntnt, size_t cntntlen) :
-	attribute(attr), name_string(nm), is_valid(true) {
+	attribute(attr), name_str(nm), is_valid(true) {
 	if (attribute & ATTRIBUTE_CONTAINER) {
 		content = nullptr;
 		contentlen = 0;
@@ -232,125 +253,3 @@ SerializableStringDict::SerializableStringDict(unsigned int attr, std::string& n
 		memcpy(content.get(), cntnt, contentlen);
 	}
 }
-
-
-/*
-SSDReader::SSDReader() : 
-	src(nullptr), srclen(0), offset(0), attributes(0), contentlen(0), content(nullptr) { }
-
-SSDReader::~SSDReader(){ }
-
-SSDReader::SSDReader(char* ibuf, size_t ibuflen, size_t ioffset) : 
-	src(nullptr), srclen(0), offset(0), attributes(0), contentlen(0), content(nullptr) {
-	unsigned int iattribute = 0;
-	unsigned int inamelen = 0;
-	unsigned long long icontentlen = 0;
-
-	do{
-		if(ioffset+8 > ibuflen) // attribute + name length
-			break;
-
-		iattribute = *(unsigned int*)(&ibuf[ioffset]);
-		inamelen = *(unsigned int*)(&ibuf[ioffset+4]);
-		if(inamelen == 0)
-			break;
-
-		if(ioffset+8+inamelen+8 > ibuflen)
-			break;
-		icontentlen = *(unsigned long long*)(&ibuf[ioffset+4+inamelen]);
-		if(ioffset+8+inamelen+8+icontentlen > ibuflen)
-			break;
-
-		src = ibuf;
-		srclen = ibuflen;
-		offset = ioffset;
-		attributes = iattribute;
-		name = string(&src[offset+4],&src[offset+4+inamelen]);
-		contentlen = icontentlen;
-		content = &src[offset+4+4+name.size()+8];
-
-		if(iattribute & IS_CONTAINER){
-			size_t nxt_offset = offset+4+4+name.size()+8;
-			while(nxt_offset < srclen){
-				shared_ptr<SSDReader> new_child(new SSDReader(src,srclen,nxt_offset));
-				if(!(*(new_child.get())))
-					break;
-				child[new_child.get()->name] = new_child;
-				nxt_offset += new_child.get()->get_total_size();	
-			}
-		}
-	} while(0);
-}
-
-SSDReader SSDReader::operator[](std::string& key){
-	if(child.find(key) != child.end()){
-		return *(child[key].get());
-	}
-	else{
-		SSDReader empty;
-		return empty;
-	}
-}
-
-char* SSDReader::get_raw(){
-	return content;
-}
-
-unsigned long long SSDReader::get_total_size(){
-	return 4+4+name.size()+4+contentlen;
-}
-
-unsigned long long SSDReader::get_content_size(){
-	return contentlen;
-}
-
-SSDCreator::SSDCreator(){
-}
-
-SSDCreator::~SSDCreator(){ }
-
-unsigned long long SSDCreator::calc_total_len(){
-	unsigned long long res = 0;
-	if(attributes & IS_CONTAINER){
-		for(auto& p:child){
-			res += p.second.get()->calc_total_len();
-		}
-	}
-	else{
-		res += 4; // attributes
-		res += 4; // name len
-		res += name.size();
-		res += 8; // content size
-		res += content.size();
-	}
-	return res;
-}
-
-char* SSDCreator::serialize(){
-	unsigned long long total_len = calc_total_len();
-	char* sbuf = new char[total_len];
-	serialize_rec(sbuf, 0);
-	return sbuf;
-}
-
-void SSDCreator::serialize_rec(char* dst, size_t dstlen){
-	size_t header_and_name = 4+4+name.size();
-
-	*(unsigned int*)(&dst[0]) = attributes;
-	*(unsigned int*)(&dst[4]) = name.size();
-	memcpy(&dst[4+4], &name[0], name.size());
-
-	if(!child.empty()){ // container
-		unsigned long long x = header_and_name;
-		for(auto& p:child){
-			unsigned long long curlen = p.second.get()->calc_total_len();
-			serialize_rec(dst+x, curlen);
-			x += curlen;
-		}
-	}
-	else{
-		*(unsigned long long*)(&dst[header_and_name]) = content.size();
-		memcpy(&dst[header_and_name+8], &content[0], content.size());
-	}
-}
-*/

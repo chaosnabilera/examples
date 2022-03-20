@@ -23,7 +23,7 @@ struct ByteArr {
 
 class SerializableStringDict {
 public:
-	SerializableStringDict(bool is_valid = false);
+	SerializableStringDict(std::string name = "", bool is_valid = false);
 	~SerializableStringDict();
 	SerializableStringDict(const SerializableStringDict& rhs);
 
@@ -43,6 +43,8 @@ public:
 	std::shared_ptr<SerializableStringDict> find_child(std::string& name);
 	void add_child(std::shared_ptr<SerializableStringDict>& new_child);
 	void set_content(char* src, size_t srclen);
+
+	void print(int lv = 0);
 
 	operator bool() const;
 
@@ -69,51 +71,9 @@ private:
 	void rec_serialize(char* buf, size_t buflen);
 	
 	unsigned int attribute;
-	std::string name_string;
+	std::string name_str;
 	std::shared_ptr<char> content;
 	size_t contentlen;
 	std::unordered_map<std::string, std::shared_ptr<SerializableStringDict>> children;
 	bool is_valid;
 };
-
-/*
-
-class SSDReader{
-public:
-	SSDReader();
-	SSDReader(char* ibuf, size_t ibuflen, size_t ioffset);
-	~SSDReader();
-
-	operator bool() const { return src != nullptr; };
-	SSDReader operator[](std::string& key);
-	
-	char* get_raw();
-	unsigned long long get_total_size();
-	unsigned long long get_content_size();
-
-private:
-	char* src;
-	size_t srclen;
-	size_t offset;
-	unsigned int attributes;
-	std::string name;
-	unsigned long long contentlen;
-	char* content;
-	std::unordered_map<std::string, std::shared_ptr<SSDReader>> child;
-};
-
-class SSDCreator{
-public:
-	SSDCreator();
-	~SSDCreator();
-	char* serialize();
-	unsigned long long calc_total_len();
-	unsigned int attributes;
-	std::string name;
-	std::vector<char> content;
-	std::unordered_map<std::string, std::shared_ptr<SSDCreator>> child;
-private:
-	void serialize_rec(char* dst, size_t dstlen);
-};
-
-*/
