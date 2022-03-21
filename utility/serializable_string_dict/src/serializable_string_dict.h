@@ -36,7 +36,7 @@ public:
 		T res;
 		size_t copy_len = min(sizeof(T), contentlen);
 		memset(&res, 0, sizeof(T));
-		memcpy(&res, content, copy_len);
+		memcpy(&res, content.get(), copy_len);
 		return res;
 	}
 
