@@ -43,5 +43,12 @@ def getFirstImageFromZip(target_dir):
 			zfiFile.close()
 
 
+def print_usage():
+	print("Usage: {} <destination folder>".format(sys.argv[0]))
+
 if __name__ == '__main__':
+	if len(sys.argv) != 2:
+		print_usage()
+		sys.exit(1)
+
 	getFirstImageFromZip(sys.argv[1])
