@@ -6,7 +6,6 @@ import sys
 import traceback
 
 from PIL import Image
-from sqlalchemy import false
 
 def create_logger():
     logger = logging.getLogger()
@@ -24,7 +23,7 @@ def create_logger():
 def convert_single(src_path, dst_path):
     print(f'{src_path} -> {dst_path}')
     im = Image.open(src_path).convert("RGB")
-    im.save(dst_path, quality=50, method=6)
+    im.save(dst_path, quality=100, method=6)
     im.close()
 
 def single_task(srcdir, dstdir, input_queue, log_queue):

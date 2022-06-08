@@ -6,7 +6,6 @@ import sys
 import traceback
 
 from PIL import Image
-from sqlalchemy import false
 
 def create_logger():
     logger = logging.getLogger()
