@@ -24,15 +24,15 @@ void encrypt_file(string src, string dst) {
 	DWORD ifile_encrypted_size = 0;
 
 	do {
-		if (!WinPath::is_fileA(src)) {
+		if (!WinPath::isFileA(src)) {
 			printf("%s is not a file!\n", src.c_str());
 			break;
 		}
-		if ((ifile = WinPath::open_fileA(src, "r")) == nullptr) {
+		if ((ifile = WinPath::openFileA(src, "r")) == nullptr) {
 			printf("failed to open %s for read\n", src.c_str());
 			break;
 		}
-		if (!ifile->filesize(ifile_content_size)) {
+		if (!ifile->fileSize(ifile_content_size)) {
 			printf("failed to get file size of %s\n", src.c_str());
 			break;
 		}
@@ -46,7 +46,7 @@ void encrypt_file(string src, string dst) {
 			printf("failed to allocate memory of size %lld\n", ifile_content_size + 32);
 			break;
 		}
-		if (!ifile->read(ifile_content, ifile_content_size + 32, ifile_content_size, ifile_read_result)) {
+		if (!ifile->readBytes(ifile_content, ifile_content_size + 32, ifile_content_size, ifile_read_result)) {
 			printf("failed reading from %s\n", src.c_str());
 			break;
 		}
@@ -57,11 +57,11 @@ void encrypt_file(string src, string dst) {
 		}
 		printf("encrypted size of %s: %u\n", src.c_str(), ifile_encrypted_size);
 
-		if ((ofile = WinPath::open_fileA(dst, "w")) == nullptr) {
+		if ((ofile = WinPath::openFileA(dst, "w")) == nullptr) {
 			printf("failed to open %s for write\n", src.c_str());
 			break;
 		}
-		if (!(ofile->write(ifile_content, ifile_encrypted_size))) {
+		if (!(ofile->writeBytes(ifile_content, ifile_encrypted_size))) {
 			printf("failed to write to %s\n", dst.c_str());
 			break;
 		}
@@ -82,15 +82,15 @@ void decrypt_file(string src, string dst) {
 	DWORD ifile_decrypted_size = 0;
 
 	do {
-		if (!WinPath::is_fileA(src)) {
+		if (!WinPath::isFileA(src)) {
 			printf("%s is not a file!\n", src.c_str());
 			break;
 		}
-		if ((ifile = WinPath::open_fileA(src, "r")) == nullptr) {
+		if ((ifile = WinPath::openFileA(src, "r")) == nullptr) {
 			printf("failed to open %s for read\n", src.c_str());
 			break;
 		}
-		if (!ifile->filesize(ifile_content_size)) {
+		if (!ifile->fileSize(ifile_content_size)) {
 			printf("failed to get file size of %s\n", src.c_str());
 			break;
 		}
@@ -104,7 +104,7 @@ void decrypt_file(string src, string dst) {
 			printf("failed to allocate memory of size %lld\n", ifile_content_size);
 			break;
 		}
-		if (!ifile->read(ifile_content, ifile_content_size, ifile_content_size, ifile_read_result)) {
+		if (!ifile->readBytes(ifile_content, ifile_content_size, ifile_content_size, ifile_read_result)) {
 			printf("failed reading from %s\n", src.c_str());
 			break;
 		}
@@ -115,11 +115,11 @@ void decrypt_file(string src, string dst) {
 		}
 		printf("decrypted size of %s: %u\n", src.c_str(), ifile_decrypted_size);
 
-		if ((ofile = WinPath::open_fileA(dst, "w")) == nullptr) {
+		if ((ofile = WinPath::openFileA(dst, "w")) == nullptr) {
 			printf("failed to open %s for write\n", src.c_str());
 			break;
 		}
-		if (!(ofile->write(ifile_content, ifile_decrypted_size))) {
+		if (!(ofile->writeBytes(ifile_content, ifile_decrypted_size))) {
 			printf("failed to write to %s\n", dst.c_str());
 			break;
 		}

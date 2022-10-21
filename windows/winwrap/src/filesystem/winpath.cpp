@@ -1,58 +1,68 @@
-#include <cstring>
 #include <windows.h>
+
+#include <cstring>
+#include <memory>
 
 #include "dprintf.hpp"
 #include "winwrap_filesystem.h"
 
-using namespace std;
-
-bool WinPath::is_fileA(string& path) {
-	wstring wpath(path.begin(), path.end());
-	return is_fileW(wpath);
+bool WinPath::isFileA(std::string& path) {
+	std::wstring wpath(path.begin(), path.end());
+	return isFileW(wpath);
 }
 
-bool WinPath::is_fileW(wstring& path) {
+bool WinPath::isFileW(std::wstring& path) {
 	DWORD fattr = GetFileAttributesW(path.c_str());
 	return (fattr != INVALID_FILE_ATTRIBUTES) && !(fattr & FILE_ATTRIBUTE_DIRECTORY);
 }
 
-bool WinPath::is_dirA(string& path) {
-	wstring wpath(path.begin(), path.end());
-	return is_dirW(wpath);
+bool WinPath::isDirA(std::string& path) {
+	std::wstring wpath(path.begin(), path.end());
+	return isDirW(wpath);
 }
 
-bool WinPath::is_dirW(wstring& path) {
+bool WinPath::isDirW(std::wstring& path) {
 	DWORD fattr = GetFileAttributesW(path.c_str());
 	return (fattr != INVALID_FILE_ATTRIBUTES) && (fattr & FILE_ATTRIBUTE_DIRECTORY);
 }
 
-string WinPath::get_cwdA() {
-	DWORD reqlen = GetCurrentDirectoryA(0, NULL);
-	char* wd = new char[reqlen];
-	GetCurrentDirectoryA(reqlen, wd);
-	string ret(wd);
-	delete[] wd;
+std::string WinPath::getCWDA() {
+	std::string ret;
+	DWORD reqlen = 0;
+	std::shared_ptr<char> buf(nullptr);
+	
+	reqlen = GetCurrentDirectoryA(0, NULL);
+	buf = std::shared_ptr<char>(new char[reqlen], std::default_delete<char[]>());
+	GetCurrentDirectoryA(reqlen, buf.get());
+	
+	ret = buf.get();
+	
 	return ret;
 }
 
-wstring WinPath::get_cwdW() {
-	DWORD reqlen = GetCurrentDirectoryW(0, NULL);
-	WCHAR* wd = new WCHAR[reqlen];
-	GetCurrentDirectoryW(reqlen, wd);
-	wstring ret(wd);
-	delete[] wd;
+std::wstring WinPath::getCWDW() {
+	std::wstring ret;
+	DWORD reqlen = 0;
+	std::shared_ptr<WCHAR> buf(nullptr);
+	
+	reqlen = GetCurrentDirectoryW(0, NULL);
+	buf = std::shared_ptr<WCHAR>(new WCHAR[reqlen], std::default_delete<WCHAR[]>());
+	GetCurrentDirectoryW(reqlen, buf.get());
+	
+	ret = buf.get();
+	
 	return ret;
 }
 
-bool WinPath::set_cwdA(string& path) {
+bool WinPath::setCWDA(std::string& path) {
 	bool res = false;
 	do {
-		if (!is_dirA(path)) {
-			dprintf("%s is not a directory", path.c_str());
+		if (!isDirA(path)) {
+			dprintf("[WinPath::setCWDA] %s is not a directory", path.c_str());
 			break;
 		}
 		if (!SetCurrentDirectoryA(path.c_str())) {
-			dprintf("SetCurrentDirectoryA(%s) failed: %d", GetLastError());
+			dprintf("[WinPath::setCWDA] SetCurrentDirectoryA(%s) failed: 0x%08x", GetLastError());
 			break;
 		}
 		res = true;
@@ -61,16 +71,16 @@ bool WinPath::set_cwdA(string& path) {
 	return res;
 }
 
-bool WinPath::set_cwdW(wstring& path) {
+bool WinPath::setCWDW(std::wstring& path) {
 	bool res = false;
 
 	do {
-		if (!is_dirW(path)) {
-			dprintf("%S is not a directory", path.c_str());
+		if (!isDirW(path)) {
+			dprintf("[WinPath::setCWDW] %S is not a directory", path.c_str());
 			break;
 		}
 		if (!SetCurrentDirectoryW(path.c_str())) {
-			dprintf("SetCurrentDirectoryW(%S) failed : %d", GetLastError());
+			dprintf("[WinPath::setCWDW] SetCurrentDirectoryW(%S) failed : 0x%08x", GetLastError());
 			break;
 		}
 		res = true;
@@ -79,49 +89,73 @@ bool WinPath::set_cwdW(wstring& path) {
 	return res;
 }
 
-bool WinPath::listdirW(wstring& dir, vector<wstring>& res) {
-	bool success = false;
-	HANDLE hfind = INVALID_HANDLE_VALUE;
-	WIN32_FIND_DATAW ffd;
-
+bool WinPath::getAbsPathA(std::string& in, std::string& out) {
+	DWORD char_cnt = 0;
+	DWORD copycnt = 0;
+	std::shared_ptr<char> buf(nullptr);
+	char* filepart = nullptr;
+	bool res = false;
 	do {
-		if (!WinPath::is_dirW(dir)) {
-			dprintf("%S is not a directory", dir.c_str());
+		if ((char_cnt = GetFullPathNameA(in.c_str(), 0, nullptr, &filepart)) == 0) {
+			dprintf("[WinPath::getAbsPathA] GetFullPathNameA(%s) failed to get char_cnt: 0x%08x", in.c_str(), GetLastError());
 			break;
 		}
 
-		dir += L"\\*";
-		if ((hfind = FindFirstFileW(dir.c_str(), &ffd)) == INVALID_HANDLE_VALUE) {
-			dprintf("FindFirstFileW error : GetLastError: %d", GetLastError());
+		buf = std::shared_ptr<char>(new char[char_cnt], std::default_delete<char[]>());
+
+		if ((copycnt = GetFullPathNameA(in.c_str(), char_cnt, buf.get(), &filepart)) == 0) {
+			dprintf("[WinPath::getAbsPathA] GetFullPathNameA(%s) failed : 0x%08x", in.c_str(), GetLastError());
 			break;
 		}
 
-		res.clear();
-		do {
-			res.push_back(ffd.cFileName);
-		} while (FindNextFileW(hfind, &ffd) != 0);
-
-		FindClose(hfind);
-		success = true;
+		out = buf.get();
+		res = true;
 	} while (0);
 
-	return success;
+	return res;
 }
 
-bool WinPath::listdirA(string& dir, vector<string>& res) {
+bool WinPath::getAbsPathW(std::wstring& in, std::wstring& out) {
+	DWORD wchar_cnt = 0;
+	DWORD copycnt = 0;
+	std::shared_ptr<WCHAR> wbuf(nullptr);
+	WCHAR* filepart = nullptr;
+	bool res = false;
+	do {
+		if ((wchar_cnt = GetFullPathNameW(in.c_str(), 0, nullptr, &filepart)) == 0) {
+			dprintf("[WinPath::getAbsPathW] GetFullPathNameW(%S) failed to get wchar_cnt: 0x%08x", in.c_str(), GetLastError());
+			break;
+		}
+
+		wbuf = std::shared_ptr<WCHAR>(new WCHAR[wchar_cnt], std::default_delete<WCHAR[]>());
+
+		if ((copycnt = GetFullPathNameW(in.c_str(), wchar_cnt, wbuf.get(), &filepart)) == 0) {
+			dprintf("[WinPath::getAbsPathW] GetFullPathNameW(%S) failed : 0x%08x", in.c_str(), GetLastError());
+			break;
+		}
+
+		out = wbuf.get();
+		res = true;
+	} while (0);
+
+	return res;
+}
+
+bool WinPath::listDirA(std::string& dir, std::vector<std::string>& res) {
 	bool success = false;
 	HANDLE hfind = INVALID_HANDLE_VALUE;
 	WIN32_FIND_DATAA ffd;
 
 	do {
-		if (!WinPath::is_dirA(dir)) {
-			dprintf("%s is not a directory", dir.c_str());
+		if (!WinPath::isDirA(dir)) {
+			dprintf("[WinPath::listDirA] %s is not a directory", dir.c_str());
 			break;
 		}
 
-		dir += "\\*";
+		dir += (dir[dir.size() - 1] == '\\') ? "*" : "\\*";
+
 		if ((hfind = FindFirstFileA(dir.c_str(), &ffd)) == INVALID_HANDLE_VALUE) {
-			dprintf("FindFirstFileA error : GetLastError: %d", GetLastError());
+			dprintf("[WinPath::listDirA] FindFirstFileA error : 0x%08x", GetLastError());
 			break;
 		}
 
@@ -137,104 +171,96 @@ bool WinPath::listdirA(string& dir, vector<string>& res) {
 	return success;
 }
 
-bool WinPath::get_abspathW(wstring& in, wstring& out) {
-	DWORD bufsize = 0;
-	DWORD copycnt = 0;
-	WCHAR* wbuf = nullptr;
-	WCHAR* filepart = nullptr;
-	bool res = false;
+bool WinPath::listDirW(std::wstring& dir, std::vector<std::wstring>& res) {
+	bool success = false;
+	HANDLE hfind = INVALID_HANDLE_VALUE;
+	WIN32_FIND_DATAW ffd;
+
 	do {
-		if ((bufsize = GetFullPathNameW(in.c_str(), 0, wbuf, &filepart)) == 0) {
-			dprintf("GetFullPathNameW(%S) failed to get bufsize: %d", in.c_str(), GetLastError());
+		if (!WinPath::isDirW(dir)) {
+			dprintf("[WinPath::listDirW] %S is not a directory", dir.c_str());
 			break;
 		}
-		wbuf = new WCHAR[bufsize];
-		if ((copycnt = GetFullPathNameW(in.c_str(), bufsize, wbuf, &filepart)) == 0) {
-			dprintf("GetFullPathNameW(%S) failed : %d", in.c_str(), GetLastError());
+
+		dir += (dir[dir.size() - 1] == L'\\') ? L"*" : L"\\*";
+		
+		if ((hfind = FindFirstFileW(dir.c_str(), &ffd)) == INVALID_HANDLE_VALUE) {
+			dprintf("[WinPath::listDirW] FindFirstFileW error : 0x%08x", GetLastError());
 			break;
 		}
-		out = wbuf;
-		res = true;
+
+		res.clear();
+		do {
+			res.push_back(ffd.cFileName);
+		} while (FindNextFileW(hfind, &ffd) != 0);
+
+		FindClose(hfind);
+		success = true;
 	} while (0);
 
-	if (wbuf)
-		delete[] wbuf;
-
-	return res;
+	return success;
 }
 
-bool WinPath::get_abspathA(string& in, string& out) {
-	DWORD bufsize = 0;
-	DWORD copycnt = 0;
-	char* buf = nullptr;
-	char* filepart = nullptr;
-	bool res = false;
-	do {
-		if ((bufsize = GetFullPathNameA(in.c_str(), 0, buf, &filepart)) == 0) {
-			dprintf("GetFullPathNameA(%s) failed to get bufsize: %d", in.c_str(), GetLastError());
-			break;
-		}
-		buf = new char[bufsize];
-		if ((copycnt = GetFullPathNameA(in.c_str(), bufsize, buf, &filepart)) == 0) {
-			dprintf("GetFullPathNameA(%s) failed : %d", in.c_str(), GetLastError());
-			break;
-		}
-		out = buf;
-		res = true;
-	} while (0);
-
-	if (buf)
-		delete[] buf;
-
-	return res;
+WinFile* WinPath::openFileA(std::string& path, std::string mode) {
+	std::wstring wpath(path.begin(), path.end());
+	std::wstring wmode(mode.begin(), mode.end());
+	return openFileW(wpath, wmode);
 }
 
-WinFile* WinPath::open_fileA(string& path, string mode) {
-	wstring wpath(path.begin(), path.end());
-	wstring wmode(mode.begin(), mode.end());
-	return open_fileW(wpath, wmode);
-}
-
-WinFile* WinPath::open_fileW(wstring& path, wstring mode) {
+WinFile* WinPath::openFileW(std::wstring& path, std::wstring mode) {
 	WinFile* new_winfile = nullptr;
 	HANDLE hfile = INVALID_HANDLE_VALUE;
-	DWORD err;
-	wstring abspath;
+	std::wstring abspath;
 
-	DWORD desiredaccess;
-	DWORD sharemode;
-	DWORD creationdisposition;
+	DWORD desired_access = 0;
+	DWORD share_mode = 0;
+	DWORD creation_disposition = 0;
 
 	do {
 		if (mode == L"r") {
-			desiredaccess = GENERIC_READ; sharemode = FILE_SHARE_READ; creationdisposition = OPEN_EXISTING;
+			desired_access = GENERIC_READ; 
+			share_mode = FILE_SHARE_READ; 
+			creation_disposition = OPEN_EXISTING;
 		}
 		else if (mode == L"r+") {
-			desiredaccess = GENERIC_READ | GENERIC_WRITE; sharemode = 0; creationdisposition = OPEN_EXISTING;
+			desired_access = GENERIC_READ | GENERIC_WRITE; 
+			creation_disposition = OPEN_EXISTING;
 		}
 		else if (mode == L"w") {
-			desiredaccess = GENERIC_WRITE; sharemode = 0; creationdisposition = CREATE_ALWAYS;
+			desired_access = GENERIC_WRITE; 
+			creation_disposition = CREATE_ALWAYS;
 		}
 		else if (mode == L"w+") {
-			desiredaccess = GENERIC_READ | GENERIC_WRITE; sharemode = 0; creationdisposition = CREATE_ALWAYS;
+			desired_access = GENERIC_READ | GENERIC_WRITE; 
+			creation_disposition = CREATE_ALWAYS;
 		}
 		else if (mode == L"a") {
-			desiredaccess = GENERIC_WRITE; sharemode = 0; creationdisposition = OPEN_ALWAYS;
+			desired_access = GENERIC_WRITE; 
+			creation_disposition = OPEN_ALWAYS;
 		}
 		else if (mode == L"a+") {
-			desiredaccess = GENERIC_READ | GENERIC_WRITE; sharemode = 0; creationdisposition = OPEN_ALWAYS;
+			desired_access = GENERIC_READ | GENERIC_WRITE; 
+			creation_disposition = OPEN_ALWAYS;
 		}
 		else if (mode == L"rw") { // custom
-			desiredaccess = GENERIC_READ | GENERIC_WRITE; sharemode = 0; creationdisposition = OPEN_ALWAYS;
+			desired_access = GENERIC_READ | GENERIC_WRITE; 
+			creation_disposition = OPEN_ALWAYS;
 		}
 		else {
-			dprintf("[WinPath::open_fileW] Invalid open mode: %S", mode.c_str());
+			dprintf("[WinPath::openFileW] Invalid open mode: %S", mode.c_str());
 			break;
 		}
 
-		if ((hfile = CreateFileW(path.c_str(), desiredaccess, sharemode, NULL, creationdisposition, FILE_ATTRIBUTE_NORMAL, NULL)) == INVALID_HANDLE_VALUE) {
-			err = GetLastError();
-			dprintf("[WinPath::open_fileW] CreateFileW (%S,%S) failed with %d(0x%08X)", path.c_str(), mode.c_str(), err, err);
+		if ((hfile = CreateFileW(
+						path.c_str(), 
+						desired_access, 
+						share_mode, 
+						NULL, 
+						creation_disposition, 
+						FILE_ATTRIBUTE_NORMAL, 
+						NULL
+		)) == INVALID_HANDLE_VALUE) {
+			dprintf("[WinPath::openFileW] CreateFileW (%S,%S) failed : 0x%08X", path.c_str(), mode.c_str(), GetLastError());
 			break;
 		}
 	} while (0);
@@ -242,8 +268,8 @@ WinFile* WinPath::open_fileW(wstring& path, wstring mode) {
 	if (hfile != INVALID_HANDLE_VALUE) {
 		new_winfile = new WinFile(hfile, mode);
 		if (mode[0] == L'a') {
-			if (!(new_winfile->setpos_end())) {
-				dprintf("[WinPath::open_fileW] failed to set pointer at end for mode: %S)", mode.c_str());
+			if (!(new_winfile->setPosToEnd())) {
+				dprintf("[WinPath::openFileW] failed to set pointer at end for mode: %S)", mode.c_str());
 				delete new_winfile;
 				new_winfile = nullptr;
 			}

@@ -10,25 +10,25 @@ class WinFile;
 
 class WinPath {
 public:
-	static bool is_fileA(std::string& path);
-	static bool is_fileW(std::wstring& path);
-	static bool is_dirA(std::string& path);
-	static bool is_dirW(std::wstring& path);
+	static bool isFileA(std::string& path);
+	static bool isFileW(std::wstring& path);
+	static bool isDirA(std::string& path);
+	static bool isDirW(std::wstring& path);
 
-	static std::string get_cwdA();
-	static std::wstring get_cwdW();
+	static std::string getCWDA();
+	static std::wstring getCWDW();
 
-	static bool set_cwdA(std::string& path);
-	static bool set_cwdW(std::wstring& path);
+	static bool setCWDA(std::string& path);
+	static bool setCWDW(std::wstring& path);
 
-	static bool listdirW(std::wstring& dir, std::vector<std::wstring>& res);
-	static bool listdirA(std::string& dir, std::vector<std::string>& res);
+	static bool getAbsPathA(std::string& in, std::string& out);
+	static bool getAbsPathW(std::wstring& in, std::wstring& out);
 
-	static bool get_abspathW(std::wstring& in, std::wstring& out);
-	static bool get_abspathA(std::string& in, std::string& out);
+	static bool listDirA(std::string& dir, std::vector<std::string>& res);
+	static bool listDirW(std::wstring& dir, std::vector<std::wstring>& res);
 
-	static WinFile* open_fileA(std::string& path, std::string mode);
-	static WinFile* open_fileW(std::wstring& path, std::wstring mode);
+	static WinFile* openFileA(std::string& path, std::string mode);
+	static WinFile* openFileW(std::wstring& path, std::wstring mode);
 
 private:
 	WinPath();
@@ -38,16 +38,16 @@ class WinFile {
 public:
 	friend class WinPath;
 	~WinFile();
-	bool filesize(long long& out_filesize);
-	bool getpos(long long& out_pos);
-	bool setpos(long long abspos);
-	bool setpos_beg();
-	bool setpos_end();
-	bool read(BYTE* outbuf, long long outbuf_len, long long readlen, long long& resultcnt);
-	bool write(BYTE* inbuf, long long inbuf_len);
-	std::shared_ptr<BYTE> read_all(long long& resultcnt);
+	bool fileSize(long long& out_filesize);
+	bool getPos(long long& out_pos);
+	bool setPos(long long abspos);
+	bool setPosToBeg();
+	bool setPosToEnd();
+	bool readBytes(BYTE* outbuf, long long outbuf_len, long long readlen, long long& resultcnt);
+	bool writeBytes(BYTE* inbuf, long long inbuf_len);
+	bool readAll(std::pair<std::shared_ptr<BYTE>, long long>& out_pair);
 private:
 	WinFile(HANDLE hfile, std::wstring& mode);
-	HANDLE hfile;
+	HANDLE hFile;
 	std::wstring& mode;
 };

@@ -6,8 +6,8 @@
 
 using namespace std;
 
-void navigate_filesystemW();
-void copy_file(string src, string dst);
+void WWNavigateFileSystem();
+void WWCopyFileSimple(string src, string dst);
 void run_echoclient_blockio(string server_addr, string server_port);
 void run_echoclient_nonblockio(string server_addr, string server_port);
 void run_echoserver_blockio(string server_addr, string server_port);
@@ -35,10 +35,10 @@ int main(int argc, char** argv) {
 		arg.push_back(argv[i]);
 
 	if (arg.size() == 2 && arg[1] == "fs") {
-		navigate_filesystemW();
+		WWNavigateFileSystem();
 	}
 	else if (arg.size() == 4 && arg[1] == "copy") {
-		copy_file(arg[2], arg[3]);
+		WWCopyFileSimple(arg[2], arg[3]);
 	}
 	else if (arg.size() == 5 && arg[1] == "echoclient") {
 		if (arg[2] == "block") {

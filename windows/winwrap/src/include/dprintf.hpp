@@ -16,7 +16,7 @@
 static _inline void dprintf_stdout(const char* format, ...)
 {
 	va_list args;
-	char buffer[4096];
+	char buffer[8192];
 	size_t len;
 	_snprintf_s(buffer, sizeof(buffer), sizeof(buffer) - 1, "[%04x] ", GetCurrentThreadId());
 	len = strlen(buffer);
