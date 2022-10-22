@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 
+#include <Windows.h>
 #include <locale.h>
 
 using namespace std;

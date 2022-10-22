@@ -12,8 +12,15 @@ class WinPath {
 public:
 	static bool isFileA(std::string& path);
 	static bool isFileW(std::wstring& path);
+	
 	static bool isDirA(std::string& path);
 	static bool isDirW(std::wstring& path);
+
+	static bool getFileTimeA(std::string& path, FILETIME* creation_time, FILETIME* last_access_time, FILETIME* last_write_time);
+	static bool getFileTimeW(std::wstring& path, FILETIME* creation_time, FILETIME* last_access_time, FILETIME* last_write_time);
+
+	static bool getFileTimeAsSystemTimeA(std::string& path, SYSTEMTIME* creation_time, SYSTEMTIME* last_access_time, SYSTEMTIME* last_write_time);
+	static bool getFileTimeAsSystemTimeW(std::wstring& path, SYSTEMTIME* creation_time, SYSTEMTIME* last_access_time, SYSTEMTIME* last_write_time);
 
 	static std::string getCWDA();
 	static std::wstring getCWDW();

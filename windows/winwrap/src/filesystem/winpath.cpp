@@ -26,6 +26,87 @@ bool WinPath::isDirW(std::wstring& path) {
 	return (fattr != INVALID_FILE_ATTRIBUTES) && (fattr & FILE_ATTRIBUTE_DIRECTORY);
 }
 
+bool WinPath::getFileTimeA(std::string& path, FILETIME* creation_time, FILETIME* last_access_time, FILETIME* last_write_time) {
+	std::wstring wpath(path.begin(), path.end());
+	bool result = false;
+	if (!(result = getFileTimeW(wpath, creation_time, last_access_time, last_write_time))) {
+		dprintf("[WinPath::getFileTimeA] Failed");
+	}
+	return result;
+}
+
+bool WinPath::getFileTimeW(std::wstring& path, FILETIME* creation_time, FILETIME* last_access_time, FILETIME* last_write_time) {
+	bool result = false;
+	HANDLE hfile = INVALID_HANDLE_VALUE;
+	DWORD flags_and_attributes = FILE_ATTRIBUTE_READONLY;
+
+	do {
+		if (isDirW(path)) { // gets ERROR_ACCESS_DENIED(0x5) if this flag is not set
+			flags_and_attributes |= FILE_FLAG_BACKUP_SEMANTICS;
+		}
+
+		if ((hfile = CreateFileW(
+			path.c_str(),
+			GENERIC_READ,
+			FILE_SHARE_READ,
+			NULL,
+			OPEN_EXISTING,
+			flags_and_attributes,
+			NULL
+		)) == INVALID_HANDLE_VALUE) {
+			dprintf("[WinPath::getFileTimeW] CreateFileW (%S) failed: 0x%08x", path.c_str(), GetLastError());
+			break;
+		}
+
+		if (!GetFileTime(hfile, creation_time, last_access_time, last_write_time)) {
+			dprintf("[WinPath::getFileTimeW] GetFileTime failed : 0x%08x", GetLastError());
+			break;
+		}
+
+		result = true;
+	} while (0);
+	
+	if (hfile != INVALID_HANDLE_VALUE)
+		CloseHandle(hfile);
+	
+	return result;
+}
+
+bool WinPath::getFileTimeAsSystemTimeW(std::wstring& path, SYSTEMTIME* creation_time, SYSTEMTIME* last_access_time, SYSTEMTIME* last_write_time) {
+	bool result = false;
+	FILETIME f_ct = { 0 };
+	FILETIME f_at = { 0 };
+	FILETIME f_wt = { 0 };
+
+	do {
+		if (!getFileTimeW(path, &f_ct, &f_at, &f_wt)) {
+			dprintf("[WinPath::getFileTimeAsSystemTimeW] WinPath::getFileTimeW failed");
+			break;
+		}
+		if (creation_time) {
+			if (!FileTimeToSystemTime(&f_ct, creation_time)) {
+				dprintf("[WinPath::getFileTimeAsSystemTimeW] FileTimeToSystemTime creation_time failed");
+				break;
+			}
+		}
+		if (last_access_time) {
+			if (!FileTimeToSystemTime(&f_at, last_access_time)) {
+				dprintf("[WinPath::getFileTimeAsSystemTimeW] FileTimeToSystemTime last_access_time failed");
+				break;
+			}
+		}
+		if (last_write_time) {
+			if (!FileTimeToSystemTime(&f_wt, last_write_time)) {
+				dprintf("[WinPath::getFileTimeAsSystemTimeW] FileTimeToSystemTime last_write_time failed");
+				break;
+			}
+		}
+		result = true;
+	} while (0);
+
+	return result;
+}
+
 std::string WinPath::getCWDA() {
 	std::string ret;
 	DWORD reqlen = 0;

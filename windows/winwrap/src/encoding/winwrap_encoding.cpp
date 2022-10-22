@@ -1,27 +1,42 @@
 #include "winwrap_encoding.h"
 
-WCHAR* utf8_to_wchar(const char* in)
+#include "dprintf.hpp"
+
+WCHAR* WinEncoding::utf8_to_wchar(const char* in)
 {
 	WCHAR* out = nullptr;
+	UINT codepage[] = { CP_ACP, CP_OEMCP, CP_THREAD_ACP, CP_UTF8 };
+	DWORD getlasterror = ERROR_UNHANDLED_ERROR;
 	int len = 0;
 
-	do {
-		if (in == nullptr)
-			break;
-		if ((len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, in, -1, NULL, 0)) <= 0)
-			break;
-		if ((out = (WCHAR*)malloc(sizeof(WCHAR) * len)) == nullptr)
-			break;
-		if (MultiByteToWideChar(CP_UTF8, 0, in, -1, out, len) == 0) {
-			free(out); out = nullptr;
+	if (in == nullptr)
+		return nullptr;
+
+	for (int cp : codepage) {
+		if ((len = MultiByteToWideChar(cp, MB_ERR_INVALID_CHARS, in, -1, NULL, 0)) <= 0) {
+			if ((getlasterror = GetLastError()) == ERROR_NO_UNICODE_TRANSLATION)
+				continue;
+				
+			dprintf("[WinEncoding::utf8_to_wchar] MultiByteToWideChar failed : 0x%08x", getlasterror);
 			break;
 		}
-	} while (0);
+
+		out = new WCHAR[len];
+			
+		if (MultiByteToWideChar(cp, 0, in, -1, out, len) == 0) {
+			delete[] out;
+			out = nullptr;
+			break;
+		}
+			
+		// at this stage, all is well
+		break;
+	}
 
 	return out;
 }
 
-char* wchar_to_utf8(const WCHAR* in)
+char* WinEncoding::wchar_to_utf8(const WCHAR* in)
 {
 	char* out = nullptr;
 	int len = 0;
