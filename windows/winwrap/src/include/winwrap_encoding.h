@@ -2,11 +2,15 @@
 
 #include <Windows.h>
 
+#include <memory>
+
 class WinEncoding {
 public:
-	static WCHAR* utf8_to_wchar(const char* in);
-	static char* wchar_to_utf8(const WCHAR* in);
+	static bool convertMultiByteToWCHAR(const char* in_mb, std::shared_ptr<WCHAR>& out_wchar);
+	static bool convertMultiByteToWCHAR(const char* in_mb, UINT codepage, std::shared_ptr<WCHAR>& out_wchar);
+	static bool convertWCHARtoMultiByte(const WCHAR* in_wchar, std::shared_ptr<char>& out_mb);
+	static bool convertWCHARtoMultiByte(const WCHAR* in_wchar, UINT codepage, std::shared_ptr<char>& out_mb);
+	~WinEncoding();
 private:
 	WinEncoding();
-	~WinEncoding();
 };

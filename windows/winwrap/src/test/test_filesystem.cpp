@@ -10,7 +10,7 @@ static bool WWPrintCurrentWorkingDirectory();
 
 void WWNavigateFileSystem() {
 	char mbline[0x1000] = { 0 };
-	WCHAR wcline[0x1000] = { 0 };
+	std::shared_ptr<WCHAR> wcline(nullptr);
 	int assign_cnt = 0;
 	std::wstring icmd, iarg;
 	
@@ -20,20 +20,23 @@ void WWNavigateFileSystem() {
 	while (true) {
 		printf("%S>", WinPath::getCWDW().c_str());
 		assign_cnt = scanf("%s", mbline);
-		WCHAR* tmp_wcline = WinEncoding::utf8_to_wchar(mbline);
-		icmd = tmp_wcline;
-		delete[] tmp_wcline;
-		// std::wcout << iline << std::endl;
+
+		if (!WinEncoding::convertMultiByteToWCHAR(mbline, wcline)) {
+			printf("Unable to convert input to WCHAR\n");
+			continue;
+		}
+		icmd = wcline.get();
 		
 		if (icmd == L"exit") {
 			break;
 		}
 		else if (icmd == L"cd") {
 			assign_cnt = scanf("%s", mbline);
-			WCHAR* tmp_wcline = WinEncoding::utf8_to_wchar(mbline);
-			iarg = tmp_wcline;
-			delete[] tmp_wcline;
-			
+			if (!WinEncoding::convertMultiByteToWCHAR(mbline, wcline)) {
+				printf("Unable to convert input to WCHAR\n");
+				continue;
+			}
+			iarg = wcline.get();
 			if (!WinPath::setCWDW(iarg)) {
 				printf("WinPath::setCWDW(%S) failed\n", iarg.c_str());
 				continue;
