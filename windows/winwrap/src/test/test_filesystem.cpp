@@ -7,38 +7,40 @@
 #include "winwrap_filesystem.h"
 
 static bool WWPrintCurrentWorkingDirectory();
+static bool WWGetNextInputWord(std::wstring& out_word);
+
+bool WWGetNextInputWord(std::wstring& out_word) {
+	char mbline[0x1000];
+	int assign_cnt = 0;
+	std::shared_ptr<WCHAR> wcline(nullptr);
+	
+	assign_cnt = scanf("%s", mbline);
+	if (!WinEncoding::convertMultiByteToWCHAR(mbline, wcline)) {
+		printf("Unable to convert input to WCHAR\n");
+		return false;
+	}
+	out_word = wcline.get();
+	return true;
+}
 
 void WWNavigateFileSystem() {
-	char mbline[0x1000] = { 0 };
-	std::shared_ptr<WCHAR> wcline(nullptr);
-	int assign_cnt = 0;
-	std::wstring icmd, iarg;
-	
+	std::wstring icmd, iarg1, iarg2;	
 
 	printf("Shell!\n");
-
 	while (true) {
 		printf("%S>", WinPath::getCWDW().c_str());
-		assign_cnt = scanf("%s", mbline);
 
-		if (!WinEncoding::convertMultiByteToWCHAR(mbline, wcline)) {
-			printf("Unable to convert input to WCHAR\n");
+		if (!WWGetNextInputWord(icmd))
 			continue;
-		}
-		icmd = wcline.get();
 		
 		if (icmd == L"exit") {
 			break;
 		}
 		else if (icmd == L"cd") {
-			assign_cnt = scanf("%s", mbline);
-			if (!WinEncoding::convertMultiByteToWCHAR(mbline, wcline)) {
-				printf("Unable to convert input to WCHAR\n");
+			if (!WWGetNextInputWord(iarg1))
 				continue;
-			}
-			iarg = wcline.get();
-			if (!WinPath::setCWDW(iarg)) {
-				printf("WinPath::setCWDW(%S) failed\n", iarg.c_str());
+			if (!WinPath::setCWDW(iarg1)) {
+				printf("WinPath::setCWDW(%S) failed\n", iarg1.c_str());
 				continue;
 			}
 		}
@@ -48,6 +50,16 @@ void WWNavigateFileSystem() {
 		else if (icmd == L"ls") {
 			if (!WWPrintCurrentWorkingDirectory()) {
 				printf("[WWNavigateFileSystem] WWPrintCurrentWorkingDirectory failed!\n");
+			}
+		}
+		else if (icmd == L"mv") {
+			if (!WWGetNextInputWord(iarg1) || !WWGetNextInputWord(iarg2))
+				continue;
+			if (WinPath::moveFileW(iarg1, iarg2, true)) {
+				printf("[WWNavigateFileSystem] %S -> %S success\n", iarg1.c_str(), iarg2.c_str());
+			}
+			else {
+				printf("[[WWNavigateFileSystem] %S -> %S failed\n", iarg1.c_str(), iarg2.c_str());
 			}
 		}
 	}

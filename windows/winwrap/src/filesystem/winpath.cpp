@@ -72,6 +72,15 @@ bool WinPath::getFileTimeW(std::wstring& path, FILETIME* creation_time, FILETIME
 	return result;
 }
 
+bool WinPath::getFileTimeAsSystemTimeA(std::string& path, SYSTEMTIME* creation_time, SYSTEMTIME* last_access_time, SYSTEMTIME* last_write_time) {
+	std::wstring wpath(path.begin(), path.end());
+	bool result = false;
+	if (!(result = getFileTimeAsSystemTimeW(wpath, creation_time, last_access_time, last_write_time))) {
+		dprintf("[WinPath::getFileTimeAsSystemTimeA] Failed");
+	}
+	return result;
+}
+
 bool WinPath::getFileTimeAsSystemTimeW(std::wstring& path, SYSTEMTIME* creation_time, SYSTEMTIME* last_access_time, SYSTEMTIME* last_write_time) {
 	bool result = false;
 	FILETIME f_ct = { 0 };
@@ -358,4 +367,32 @@ WinFile* WinPath::openFileW(std::wstring& path, std::wstring mode) {
 	}
 
 	return new_winfile;
+}
+
+bool WinPath::moveFileA(std::string& src, std::string& dst, bool overwrite) {
+	bool result = false;
+	std::wstring w_src(src.begin(), src.end());
+	std::wstring w_dst(dst.begin(), dst.end());
+	if (!(result = moveFileW(w_src, w_dst, overwrite))) {
+		dprintf("[WinPath::moveFileA] Failed");
+	}
+	return result;
+}
+
+bool WinPath::moveFileW(std::wstring& src, std::wstring& dst, bool overwrite) {
+	bool result = false;
+	DWORD move_flag = MOVEFILE_COPY_ALLOWED | MOVEFILE_WRITE_THROUGH;
+	
+	do {
+		if (overwrite) {
+			move_flag |= MOVEFILE_REPLACE_EXISTING;
+		}
+		if (!MoveFileExW(src.c_str(), dst.c_str(), move_flag)) {
+			dprintf("[WinPath::moveFileW] MoveFileExW failed : 0x%08x", GetLastError());
+			break;
+		}
+		result = true;
+	} while (0);
+
+	return result;
 }

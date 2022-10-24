@@ -37,6 +37,9 @@ public:
 	static WinFile* openFileA(std::string& path, std::string mode);
 	static WinFile* openFileW(std::wstring& path, std::wstring mode);
 
+	static bool moveFileA(std::string& src, std::string& dst, bool overwrite = false);
+	static bool moveFileW(std::wstring& src, std::wstring& dst, bool overwrite = false);
+
 private:
 	WinPath();
 };
