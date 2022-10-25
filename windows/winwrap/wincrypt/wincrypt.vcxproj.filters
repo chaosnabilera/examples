@@ -20,7 +20,13 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\wincrypt\wincryptaes.cpp">
+    <ClCompile Include="..\src\wincrypt\wincrypt_aes256.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wincrypt\wincrypt_sha256.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wincrypt\wincrypt_common.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
