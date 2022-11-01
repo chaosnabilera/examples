@@ -62,6 +62,16 @@ void WWNavigateFileSystem() {
 				printf("[[WWNavigateFileSystem] %S -> %S failed\n", iarg1.c_str(), iarg2.c_str());
 			}
 		}
+		else if (icmd == L"mkdir") {
+			if (!WWGetNextInputWord(iarg1))
+				continue;
+			if (WinPath::createDirW(iarg1)) {
+				printf("[WWNavigateFileSystem] mkdir %S success\n", iarg1.c_str());
+			}
+			else {
+				printf("[WWNavigateFileSystem] mkdir %S failed\n", iarg1.c_str());
+			}
+		}
 	}
 }
 

@@ -6,6 +6,15 @@
 #include "dprintf.hpp"
 #include "winwrap_filesystem.h"
 
+bool WinPath::isPathA(std::string& path) {
+	std::wstring wpath(path.begin(), path.end());
+	return isPathW(wpath);
+}
+
+bool WinPath::isPathW(std::wstring& path) {
+	return (GetFileAttributesW(path.c_str()) != INVALID_FILE_ATTRIBUTES);
+}
+
 bool WinPath::isFileA(std::string& path) {
 	std::wstring wpath(path.begin(), path.end());
 	return isFileW(wpath);
@@ -395,4 +404,67 @@ bool WinPath::moveFileW(std::wstring& src, std::wstring& dst, bool overwrite) {
 	} while (0);
 
 	return result;
+}
+
+bool WinPath::createDirA(std::string& path) {
+	std::wstring wpath(path.begin(), path.end());
+	bool result = false;
+	if (!(result = createDirW(wpath))) {
+		dprintf("[WinPath::createDirA] Failed");
+	}
+	return result;
+}
+
+bool WinPath::createDirW(std::wstring& path) {
+	std::wstring abspath;
+
+	if (!getAbsPathW(path, abspath)) {
+		dprintf("[WinPath::createDirW] getAbsPathW failed : %S", path.c_str());
+		return false;
+	}
+	
+	if (isFileW(abspath)) {
+		dprintf("[WinPath::createDirW] File with same name exists : %S", path.c_str());
+		return false;
+	}
+
+	if (isDirW(abspath))
+		return true;
+
+	for (int i = abspath.length() - 1; i >= 0; --i) {
+		if (abspath[i] == L'\\' || abspath[i] == L'/') {
+			std::wstring subpath = abspath.substr(0, i);
+			if (createDirW(subpath)) {
+				break;
+			}
+			else {
+				dprintf("[WinPath::createDirW] creation of subdirectory %S failed", subpath.c_str());
+				return false;
+			}
+		}
+	}
+	
+	if (CreateDirectoryW(abspath.c_str(), NULL)) {
+		return true;
+	}
+
+	dprintf("[WinPath::createDirW] CreateDirectoryW %S failed : 0x%08x", abspath.c_str(), GetLastError());
+	return false;
+}
+
+bool WinPath::deleteFileA(std::string& path) {
+	std::wstring wpath(path.begin(), path.end());
+	bool result = false;
+	if (!(result = deleteFileW(wpath))) {
+		dprintf("[WinPath::deleteFileA] Failed");
+	}
+	return result;
+}
+
+bool WinPath::deleteFileW(std::wstring& path) {
+	if (!DeleteFileW(path.c_str())) {
+		dprintf("[WinPath::deleteFileW] DeleteFileW %S failed : 0x%08x", path.c_str(), GetLastError());
+		return false;
+	}	
+	return true;
 }

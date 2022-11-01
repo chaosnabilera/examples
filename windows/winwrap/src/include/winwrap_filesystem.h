@@ -10,6 +10,9 @@ class WinFile;
 
 class WinPath {
 public:
+	static bool isPathA(std::string& path);
+	static bool isPathW(std::wstring& path);
+	
 	static bool isFileA(std::string& path);
 	static bool isFileW(std::wstring& path);
 	
@@ -40,6 +43,16 @@ public:
 	static bool moveFileA(std::string& src, std::string& dst, bool overwrite = false);
 	static bool moveFileW(std::wstring& src, std::wstring& dst, bool overwrite = false);
 
+	// return true if directory creation success or directory already exist
+	// supports nested directory creation
+	static bool createDirA(std::string& path);
+	static bool createDirW(std::wstring& path);
+
+	// return true if deletion success or path does not exist
+	static bool deleteFileA(std::string& path);
+	static bool deleteFileW(std::wstring& path);
+
+	
 private:
 	WinPath();
 };
