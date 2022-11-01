@@ -52,6 +52,20 @@ public:
 	static bool deleteFileA(std::string& path);
 	static bool deleteFileW(std::wstring& path);
 
+	//
+	// shellXXXXX functions use SHFileOperation
+	//
+	static bool shellDeletePathA(std::string& path, bool use_recycle_bin = false);
+	static bool shellDeletePathW(std::wstring& path, bool use_recycle_bin = false);
+
+	static bool shellMovePathA(std::string& src, std::string& dst, bool overwrite = false);
+	static bool shellMovePathW(std::wstring& src, std::wstring& dst, bool overwrite = false);
+
+	static bool shellCopyPathA(std::string& src, std::string& dst, bool overwrite = false);
+	static bool shellCopyPathW(std::wstring& src, std::wstring& dst, bool overwrite = false);
+	
+	static bool shellRenamePathA(std::string& src, std::string& dst, bool overwrite = false);
+	static bool shellRenamePathW(std::wstring& src, std::wstring& dst, bool overwrite = false);
 	
 private:
 	WinPath();

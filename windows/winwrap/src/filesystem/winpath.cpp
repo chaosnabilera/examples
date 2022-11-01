@@ -6,6 +6,13 @@
 #include "dprintf.hpp"
 #include "winwrap_filesystem.h"
 
+// doesn't support UNC path. Local path only
+static std::shared_ptr<WCHAR> toPCZZWSTR(std::wstring& path);
+
+static bool shellSrcDstCommonOperationA(UINT op, std::string& src, std::string& dst, bool overwrite);
+static bool shellSrcDstCommonOperationW(UINT op, std::wstring& src, std::wstring& dst, bool overwrite);
+
+
 bool WinPath::isPathA(std::string& path) {
 	std::wstring wpath(path.begin(), path.end());
 	return isPathW(wpath);
@@ -466,5 +473,148 @@ bool WinPath::deleteFileW(std::wstring& path) {
 		dprintf("[WinPath::deleteFileW] DeleteFileW %S failed : 0x%08x", path.c_str(), GetLastError());
 		return false;
 	}	
+	return true;
+}
+
+std::shared_ptr<WCHAR> toPCZZWSTR(std::wstring& path) {
+	std::vector<WCHAR> v;
+	std::shared_ptr<WCHAR> result;
+
+	for (size_t i = 0; i < path.length(); ++i) {
+		if (path[i] == L'\\' || path[i] == L'/') {
+			if (v.size() > 0 && v.back() != L'\0')
+				v.push_back(L'\0');
+		}
+		else {
+			v.push_back(path[i]);
+		}
+	}
+
+	result = std::shared_ptr<WCHAR>(new WCHAR[v.size() + 2], std::default_delete<WCHAR[]>());
+	memcpy(result.get(), &v[0], sizeof(WCHAR) * v.size());
+	result.get()[v.size()] = L'\0';
+	result.get()[v.size() + 1] = L'\0';
+
+	return result;
+}
+
+bool WinPath::shellDeletePathA(std::string& path, bool use_recycle_bin) {
+	std::wstring wpath(path.begin(), path.end());
+	bool result = false;
+	if (!(result = shellDeletePathW(wpath, use_recycle_bin))) {
+		dprintf("[WinPath::shellDeleteFileA] Failed");
+	}
+	return result;
+}
+
+bool WinPath::shellDeletePathW(std::wstring& path, bool use_recycle_bin) {
+	SHFILEOPSTRUCTW fileop = { 0 };
+	std::shared_ptr<WCHAR> path_pczzwstr;
+	int error_code = 0;
+
+	path_pczzwstr = toPCZZWSTR(path);
+	
+	fileop.hwnd = NULL;
+	fileop.wFunc = FO_DELETE;
+	fileop.pFrom = path_pczzwstr.get();
+	fileop.pTo = NULL;
+	fileop.fFlags = FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT;
+	if (use_recycle_bin) {
+		fileop.fFlags |= FOF_ALLOWUNDO;
+	}
+	if ((error_code = SHFileOperationW(&fileop)) != 0) {
+		dprintf("[WinPath::shellDeletePathW] SHFileOperationW %S failed : 0x%08x", path.c_str(), error_code);
+		return false;
+	}
+	if (fileop.fAnyOperationsAborted) {
+		dprintf("[WinPath::shellDeletePathW] SHFileOperationW %S aborted", path.c_str());
+		return false;
+	}
+	
+	return true;
+}
+
+bool WinPath::shellMovePathA(std::string& src, std::string& dst, bool overwrite) {
+	bool result = false;
+	if (!(result = shellSrcDstCommonOperationA(FO_MOVE, src, dst, overwrite))) {
+		dprintf("[WinPath::shellMovePathA] Failed");
+	}
+	return result;
+	
+}
+bool WinPath::shellMovePathW(std::wstring& src, std::wstring& dst, bool overwrite) {
+	bool result = false;
+	if (!(result = shellSrcDstCommonOperationW(FO_MOVE, src, dst, overwrite))) {
+		dprintf("[WinPath::shellMovePathW] Failed");
+	}
+	return result;
+}
+
+bool WinPath::shellCopyPathA(std::string& src, std::string& dst, bool overwrite) {
+	bool result = false;
+	if (!(result = shellSrcDstCommonOperationA(FO_COPY, src, dst, overwrite))) {
+		dprintf("[WinPath::shellCopyPathA] Failed");
+	}
+	return result;
+}
+
+bool WinPath::shellCopyPathW(std::wstring& src, std::wstring& dst, bool overwrite) {
+	bool result = false;
+	if (!(result = shellSrcDstCommonOperationW(FO_COPY, src, dst, overwrite))) {
+		dprintf("[WinPath::shellCopyPathW] Failed");
+	}
+	return result;
+}
+
+bool WinPath::shellRenamePathA(std::string& src, std::string& dst, bool overwrite) {
+	bool result = false;
+	if (!(result = shellSrcDstCommonOperationA(FO_RENAME, src, dst, overwrite))) {
+		dprintf("[WinPath::shellRenamePathA] Failed");
+	}
+	return result;
+}
+
+bool WinPath::shellRenamePathW(std::wstring& src, std::wstring& dst, bool overwrite) {
+	bool result = false;
+	if (!(result = shellSrcDstCommonOperationW(FO_RENAME, src, dst, overwrite))) {
+		dprintf("[WinPath::shellRenamePathA] Failed");
+	}
+	return result;
+}
+
+bool shellSrcDstCommonOperationA(UINT op, std::string& src, std::string& dst, bool overwrite) {
+	std::wstring wsrc(src.begin(), src.end());
+	std::wstring wdst(dst.begin(), dst.end());
+
+	return shellSrcDstCommonOperationW(op, wsrc, wdst, overwrite);
+}
+
+bool shellSrcDstCommonOperationW(UINT op, std::wstring& src, std::wstring& dst, bool overwrite) {
+	SHFILEOPSTRUCTW fileop = { 0 };
+	std::shared_ptr<WCHAR> src_pczzwstr;
+	std::shared_ptr<WCHAR> dst_pczzwstr;
+	int error_code = 0;
+
+	src_pczzwstr = toPCZZWSTR(src);
+	dst_pczzwstr = toPCZZWSTR(dst);
+
+	fileop.hwnd = NULL;
+	fileop.wFunc = op;
+	fileop.pFrom = src_pczzwstr.get();
+	fileop.pTo = dst_pczzwstr.get();
+	fileop.fFlags = FOF_NOERRORUI | FOF_SILENT | FOF_NOCONFIRMMKDIR;
+	fileop.fFlags |= FOF_NOCONFIRMATION;
+	if (overwrite) {
+		fileop.fFlags |= FOF_NOCONFIRMATION;
+	}
+
+	if ((error_code = SHFileOperationW(&fileop)) != 0) {
+		dprintf("[shellSrcDstCommonOperationW] SHFileOperationW %S -> %S failed : 0x%08x", src.c_str(), dst.c_str(), error_code);
+		return false;
+	}
+	if (fileop.fAnyOperationsAborted) {
+		dprintf("[shellSrcDstCommonOperationW] SHFileOperationW %S -> %S aborted", src.c_str(), dst.c_str());
+		return false;
+	}
 	return true;
 }

@@ -55,12 +55,22 @@ void WWNavigateFileSystem() {
 		else if (icmd == L"mv") {
 			if (!WWGetNextInputWord(iarg1) || !WWGetNextInputWord(iarg2))
 				continue;
+
+			if (WinPath::shellMovePathW(iarg1, iarg2, true)) {
+				printf("Moved %S to %S\n", iarg1.c_str(), iarg2.c_str());
+			}
+			else {
+				printf("Unable to move %S to %S\n", iarg1.c_str(), iarg2.c_str());
+			}
+			
+			/*
 			if (WinPath::moveFileW(iarg1, iarg2, true)) {
 				printf("[WWNavigateFileSystem] %S -> %S success\n", iarg1.c_str(), iarg2.c_str());
 			}
 			else {
 				printf("[[WWNavigateFileSystem] %S -> %S failed\n", iarg1.c_str(), iarg2.c_str());
 			}
+			*/
 		}
 		else if (icmd == L"mkdir") {
 			if (!WWGetNextInputWord(iarg1))
@@ -70,6 +80,48 @@ void WWNavigateFileSystem() {
 			}
 			else {
 				printf("[WWNavigateFileSystem] mkdir %S failed\n", iarg1.c_str());
+			}
+		}
+		else if (icmd == L"del") {
+			if (!WWGetNextInputWord(iarg1))
+				continue;
+			if (WinPath::shellDeletePathW(iarg1, false)) {
+				printf("[WWNavigateFileSystem] del %S success\n", iarg1.c_str());
+			}
+			else {
+				printf("[WWNavigateFileSystem] del %S failed\n", iarg1.c_str());
+			}
+		}
+		else if (icmd == L"del_recycle") {
+			if (!WWGetNextInputWord(iarg1))
+				continue;
+			if (WinPath::shellDeletePathW(iarg1, true)) {
+				printf("[WWNavigateFileSystem] del %S success\n", iarg1.c_str());
+			}
+			else {
+				printf("[WWNavigateFileSystem] del %S failed\n", iarg1.c_str());
+			}
+		}
+		else if (icmd == L"cp") {
+			if (!WWGetNextInputWord(iarg1) || !WWGetNextInputWord(iarg2))
+				continue;
+
+			if (WinPath::shellCopyPathW(iarg1, iarg2, true)) {
+				printf("Copied %S to %S\n", iarg1.c_str(), iarg2.c_str());
+			}
+			else {
+				printf("Unable to copy %S to %S\n", iarg1.c_str(), iarg2.c_str());
+			}
+		}
+		else if (icmd == L"ren") {
+			if (!WWGetNextInputWord(iarg1) || !WWGetNextInputWord(iarg2))
+				continue;
+
+			if (WinPath::shellRenamePathW(iarg1, iarg2, true)) {
+				printf("Renamed %S to %S\n", iarg1.c_str(), iarg2.c_str());
+			}
+			else {
+				printf("Unable to rename %S to %S\n", iarg1.c_str(), iarg2.c_str());
 			}
 		}
 	}
