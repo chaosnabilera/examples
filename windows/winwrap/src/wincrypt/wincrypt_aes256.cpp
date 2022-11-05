@@ -11,7 +11,7 @@ typedef struct _Aes256Key
 
 WinCryptAES256* WinCryptAES256::createWinCryptAES() {
 	HCRYPTPROV hcryptprov = NULL;
-	if (!WinCryptGetAESCryptProvider(hcryptprov)) {
+	if (!WinCryptGetRSAAESCryptProvider(&hcryptprov)) {
 		return nullptr;
 	}
 	return new WinCryptAES256(hcryptprov);
@@ -22,7 +22,7 @@ WinCryptAES256* WinCryptAES256::createWinCryptAES(char* keybuf, int keybuflen, B
 	WinCryptAES256* new_instance = nullptr;
 	HCRYPTPROV hcryptprov = NULL;
 	do {
-		if (!WinCryptGetAESCryptProvider(hcryptprov)) {
+		if (!WinCryptGetRSAAESCryptProvider(&hcryptprov)) {
 			break;
 		}
 		new_instance = new WinCryptAES256(hcryptprov);
@@ -141,7 +141,7 @@ DWORD WinCryptAES256::decrypt(BYTE* target, DWORD target_len, BOOL finalize) {
 		}
 		decrypt_result = target_len;
 		if (!CryptDecrypt(hKey, 0, finalize, 0, target, &decrypt_result)) {
-			dprintf("CryptDecrypt failed: %d", GetLastError());
+			dprintf("CryptDecrypt failed: 0x%08x", GetLastError());
 			break;
 
 		}

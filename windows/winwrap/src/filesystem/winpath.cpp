@@ -304,13 +304,19 @@ bool WinPath::listDirW(std::wstring& dir, std::vector<std::wstring>* res) {
 	return success;
 }
 
-WinFile* WinPath::openFileA(std::string& path, std::string mode) {
+bool WinPath::openFileA(std::string& path, std::string mode, std::shared_ptr<WinFile>* out_winfile) {
+	bool result = false;
 	std::wstring wpath(path.begin(), path.end());
 	std::wstring wmode(mode.begin(), mode.end());
-	return openFileW(wpath, wmode);
+
+	if (!(result = openFileW(wpath, wmode, out_winfile))) {
+		dprintf("[WinPath::openFileA] Failed");
+	}
+	
+	return result;
 }
 
-WinFile* WinPath::openFileW(std::wstring& path, std::wstring mode) {
+bool WinPath::openFileW(std::wstring& path, std::wstring mode, std::shared_ptr<WinFile>* out_winfile) {
 	WinFile* new_winfile = nullptr;
 	HANDLE hfile = INVALID_HANDLE_VALUE;
 	std::wstring abspath;
@@ -370,12 +376,15 @@ WinFile* WinPath::openFileW(std::wstring& path, std::wstring mode) {
 
 	if (hfile != INVALID_HANDLE_VALUE) {
 		new_winfile = new WinFile(hfile, mode);
-		if (mode[0] == L'a') {
+		if (mode[0] == L'a') {			
 			if (!(new_winfile->setPosToEnd())) {
 				dprintf("[WinPath::openFileW] failed to set pointer at end for mode: %S)", mode.c_str());
 				delete new_winfile;
 				new_winfile = nullptr;
 			}
+		}
+		if (new_winfile) {
+			*out_winfile = std::shared_ptr<WinFile>(new_winfile);
 		}
 	}
 

@@ -188,8 +188,8 @@ bool WWPrintCurrentWorkingDirectory() {
 }
 
 void WWCopyFileSimple(std::string src, std::string dst) {
-	WinFile* ifile = nullptr;
-	WinFile* ofile = nullptr;
+	std::shared_ptr<WinFile> ifile(nullptr);
+	std::shared_ptr<WinFile> ofile(nullptr);
 	std::shared_ptr<BYTE> ifile_buf(nullptr);
 	long long ifile_buflen = 0LL;
 
@@ -198,7 +198,7 @@ void WWCopyFileSimple(std::string src, std::string dst) {
 			printf("%s is not a file!\n", src.c_str());
 			break;
 		}
-		if ((ifile = WinPath::openFileA(src, "r")) == nullptr) {
+		if (!WinPath::openFileA(src, "r", &ifile)) {
 			printf("failed to open %s for read\n", src.c_str());
 			break;
 		}
@@ -210,7 +210,7 @@ void WWCopyFileSimple(std::string src, std::string dst) {
 
 		printf("size of %s: %lld\n", src.c_str(), ifile_buflen);
 
-		if ((ofile = WinPath::openFileA(dst, "w")) == nullptr) {
+		if (!WinPath::openFileA(dst, "w", &ofile)) {
 			printf("failed to open %s for write\n", src.c_str());
 			break;
 		}
@@ -222,9 +222,4 @@ void WWCopyFileSimple(std::string src, std::string dst) {
 
 		printf("copy %s -> %s success!\n", src.c_str(), dst.c_str());
 	} while (0);
-
-	if (ifile)
-		delete ifile;
-	if (ofile)
-		delete ofile;
 }

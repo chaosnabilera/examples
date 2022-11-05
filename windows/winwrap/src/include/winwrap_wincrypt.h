@@ -1,4 +1,6 @@
 #pragma once
+#ifndef __WINWRAP_WINCRYPT_H__
+#define __WINWRAP_WINCRYPT_H__
 
 #include <Windows.h>
 
@@ -9,27 +11,16 @@ const int AES_BLOCKSIZE = 16;
 
 const int SHA256_BLOCKSIZE = 32;
 
-typedef struct _CryptProviderParams
-{
-	const TCHAR* provider;
-	const DWORD type;
-	const DWORD flags;
-} CryptProviderParams;
-
-const CryptProviderParams AesProviders[] =
-{
-	{MS_ENH_RSA_AES_PROV, PROV_RSA_AES, 0},
-	{MS_ENH_RSA_AES_PROV, PROV_RSA_AES, CRYPT_NEWKEYSET},
-	{MS_ENH_RSA_AES_PROV_XP, PROV_RSA_AES, 0},
-	{MS_ENH_RSA_AES_PROV_XP, PROV_RSA_AES, CRYPT_NEWKEYSET}
-};
-
 enum AesMode {
 	AES_CBC = CRYPT_MODE_CBC,
 	AES_ECB = CRYPT_MODE_ECB
 };
 
-bool WinCryptGetAESCryptProvider(HCRYPTPROV& hcryptprov);
+bool WinCryptGetRSAAESCryptProvider(HCRYPTPROV* out_hcryptprov);
+
+// According to MSDN CryptGenRandom remarks thread ID is used for seeding random
+// So this is probably thread safe
+bool WinCryptGenRandom(BYTE* buf, int buflen);
 
 class WinCryptAES256 {
 public:
@@ -60,3 +51,5 @@ private:
 	HCRYPTPROV hCryptProv;
 	HCRYPTHASH hHash;
 };
+
+#endif

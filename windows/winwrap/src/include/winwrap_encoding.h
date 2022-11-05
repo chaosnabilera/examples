@@ -1,4 +1,6 @@
 #pragma once
+#ifndef __WINWRAP_ENCODING_H__
+#define __WINWRAP_ENCODING_H__
 
 #include <Windows.h>
 
@@ -14,3 +16,5 @@ public:
 private:
 	WinEncoding();
 };
+
+#endif

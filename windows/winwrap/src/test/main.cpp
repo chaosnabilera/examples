@@ -5,28 +5,28 @@
 #include <Windows.h>
 #include <locale.h>
 
-using namespace std;
-
 void WWNavigateFileSystem();
-void WWCopyFileSimple(string src, string dst);
-void run_echoclient_blockio(string server_addr, string server_port);
-void run_echoclient_nonblockio(string server_addr, string server_port);
-void run_echoserver_blockio(string server_addr, string server_port);
-void run_echoserver_nonblockio(string server_addr, string server_port);
-void encrypt_file(string src, string dst);
-void decrypt_file(string src, string dst);
+void WWCopyFileSimple(std::string src, std::string dst);
+void run_echoclient_blockio(std::string server_addr, std::string server_port);
+void run_echoclient_nonblockio(std::string server_addr, std::string server_port);
+void run_echoserver_blockio(std::string server_addr, std::string server_port);
+void run_echoserver_nonblockio(std::string server_addr, std::string server_port);
+void WWWincryptEncryptFile(std::string src, std::string dst);
+void WWWincryptDecryptFile(std::string src, std::string dst);
+bool WWWincryptGenerateRandomFile(std::string path, size_t size);
 
-void print_usage(vector<string>& arg) {
+void print_usage(std::vector<std::string>& arg) {
 	printf("Usage 1: %s fs\n", arg[0].c_str());
 	printf("Usage 2: %s copy <src filepath> <dst filepath>\n", arg[0].c_str());
 	printf("Usage 3: %s echoclient [block/nonblock] <server address> <server port>\n", arg[0].c_str());
 	printf("Usage 4: %s echoserver [block/nonblock]  <listen address> <listen port>\n", arg[0].c_str());
 	printf("Usage 5: %s encrypt_file <src filepath> <dst filepath>\n", arg[0].c_str());
 	printf("Usage 6: %s decrypt_file <src filepath> <dst filepath>\n", arg[0].c_str());
+	printf("Usage 7: %s generate_random <target filepath> <filesize>\n", arg[0].c_str());
 }
 
 int main(int argc, char** argv) {
-	vector<string> arg;
+	std::vector<std::string> arg;
 
 	// unicode characters won't be properly displayed if we omit these
 	setlocale(LC_ALL, ".65001");    // for multi-byte
@@ -64,10 +64,13 @@ int main(int argc, char** argv) {
 		}
 	}
 	else if (arg.size() == 4 && arg[1] == "encrypt_file") {
-		encrypt_file(arg[2], arg[3]);
+		WWWincryptEncryptFile(arg[2], arg[3]);
 	}
 	else if (arg.size() == 4 && arg[1] == "decrypt_file") {
-		decrypt_file(arg[2], arg[3]);
+		WWWincryptDecryptFile(arg[2], arg[3]);
+	}
+	else if (arg.size() == 4 && arg[1] == "generate_random") {
+		WWWincryptGenerateRandomFile(arg[2], std::stoi(arg[3]));
 	}
 	else {
 		print_usage(arg);

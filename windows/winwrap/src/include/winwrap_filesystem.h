@@ -1,4 +1,6 @@
 #pragma once
+#ifndef __WINWRAP_FILESYSTEM_H__
+#define __WINWRAP_FILESYSTEM_H__
 
 #include <memory>
 #include <string>
@@ -37,8 +39,8 @@ public:
 	static bool listDirA(std::string& dir, std::vector<std::string>* out_list);
 	static bool listDirW(std::wstring& dir, std::vector<std::wstring>* out_list);
 
-	static WinFile* openFileA(std::string& path, std::string mode);
-	static WinFile* openFileW(std::wstring& path, std::wstring mode);
+	static bool openFileA(std::string& path, std::string mode, std::shared_ptr<WinFile>* out_winfile);
+	static bool openFileW(std::wstring& path, std::wstring mode, std::shared_ptr<WinFile>* out_winfile);
 
 	static bool moveFileA(std::string& src, std::string& dst, bool overwrite = false);
 	static bool moveFileW(std::wstring& src, std::wstring& dst, bool overwrite = false);
@@ -91,3 +93,5 @@ private:
 	HANDLE hFile;
 	std::wstring& mode;
 };
+
+#endif

@@ -8,7 +8,7 @@ WinCryptSHA256* WinCryptSHA256::createWinCryptSHA256() {
 	WinCryptSHA256* new_instance = nullptr;
 
 	do {
-		if (!WinCryptGetAESCryptProvider(hcryptprov)) {
+		if (!WinCryptGetRSAAESCryptProvider(&hcryptprov)) {
 			break;
 		}
 		if (!CryptCreateHash(hcryptprov, CALG_SHA_256, 0, 0, &hhash)) {

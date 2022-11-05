@@ -1,4 +1,6 @@
 #pragma once
+#ifndef __WINWRAP_TCP_H__
+#define __WINWRAP_TCP_H__
 
 #include <Windows.h>
 
@@ -66,3 +68,5 @@ private:
 	std::string ip;
 	uint16_t port;
 };
+
+#endif
