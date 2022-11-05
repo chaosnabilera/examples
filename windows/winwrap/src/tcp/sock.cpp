@@ -20,7 +20,7 @@ void Sock::close() {
 	}
 }
 
-bool Sock::can_read() {
+bool Sock::canRead() {
 	int sres;
 	TIMEVAL immediate = { 0,0 };
 	fd_set fds;
@@ -39,7 +39,7 @@ bool Sock::can_read() {
 	return (sres > 0);
 }
 
-bool Sock::can_write() {
+bool Sock::canWrite() {
 	int sres;
 	TIMEVAL immediate = { 0,0 };
 	fd_set fds;
@@ -58,7 +58,7 @@ bool Sock::can_write() {
 	return (sres > 0);
 }
 
-bool Sock::switch_blocking_mode(bool should_block, bool force_setting) {
+bool Sock::switchBlockingMode(bool should_block, bool force_setting) {
 	if (sock == INVALID_SOCKET) {
 		dprintf("[switch_blocking_mode] sock is invalid");
 		return false;

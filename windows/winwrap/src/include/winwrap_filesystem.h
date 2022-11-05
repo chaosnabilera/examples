@@ -31,11 +31,11 @@ public:
 	static bool setCWDA(std::string& path);
 	static bool setCWDW(std::wstring& path);
 
-	static bool getAbsPathA(std::string& in, std::string& out);
-	static bool getAbsPathW(std::wstring& in, std::wstring& out);
+	static bool getAbsPathA(std::string& in, std::string* out);
+	static bool getAbsPathW(std::wstring& in, std::wstring* out);
 
-	static bool listDirA(std::string& dir, std::vector<std::string>& res);
-	static bool listDirW(std::wstring& dir, std::vector<std::wstring>& res);
+	static bool listDirA(std::string& dir, std::vector<std::string>* out_list);
+	static bool listDirW(std::wstring& dir, std::vector<std::wstring>* out_list);
 
 	static WinFile* openFileA(std::string& path, std::string mode);
 	static WinFile* openFileW(std::wstring& path, std::wstring mode);
@@ -55,6 +55,9 @@ public:
 	//
 	// shellXXXXX functions use SHFileOperation
 	//
+	static std::shared_ptr<WCHAR> toPCZZWSTR(std::wstring& path);
+	static std::shared_ptr<WCHAR> toPCZZWSTR(std::vector<std::wstring>& pathlist);
+
 	static bool shellDeletePathA(std::string& path, bool use_recycle_bin = false);
 	static bool shellDeletePathW(std::wstring& path, bool use_recycle_bin = false);
 
@@ -75,14 +78,14 @@ class WinFile {
 public:
 	friend class WinPath;
 	~WinFile();
-	bool fileSize(long long& out_filesize);
-	bool getPos(long long& out_pos);
+	bool fileSize(long long* out_filesize);
+	bool getPos(long long* out_pos);
 	bool setPos(long long abspos);
 	bool setPosToBeg();
 	bool setPosToEnd();
-	bool readBytes(BYTE* outbuf, long long outbuf_len, long long readlen, long long& resultcnt);
+	bool readBytes(BYTE* outbuf, long long outbuf_len, long long readlen, long long* out_readcnt);
 	bool writeBytes(BYTE* inbuf, long long inbuf_len);
-	bool readAll(std::pair<std::shared_ptr<BYTE>, long long>& out_pair);
+	bool readAll(std::shared_ptr<BYTE>* out_buf, long long* out_buflen);
 private:
 	WinFile(HANDLE hfile, std::wstring& mode);
 	HANDLE hFile;

@@ -10,10 +10,10 @@
 using namespace std;
 
 unique_ptr<WinTCP> WinTCP::instance;
-once_flag WinTCP::m_onceflag;
+once_flag WinTCP::mOnceFlag;
 
-WinTCP& WinTCP::get_instance() {
-	call_once(WinTCP::m_onceflag, []() {
+WinTCP& WinTCP::getInstance() {
+	call_once(WinTCP::mOnceFlag, []() {
 		instance.reset(new WinTCP());
 	});
 	return *(instance.get());
@@ -22,18 +22,18 @@ WinTCP& WinTCP::get_instance() {
 WinTCP::WinTCP() {
 	WSADATA wsadata{ 0 };
 	DWORD wsa_startup_result = WSAStartup(MAKEWORD(2, 2), &wsadata);
-	if (!(wsa_startup_success = (wsa_startup_result == ERROR_SUCCESS))) {
+	if (!(wsaStartupSuccess = (wsa_startup_result == ERROR_SUCCESS))) {
 		dprintf("WSAStartup failed : %d", wsa_startup_result);
 	}
 }
 
 WinTCP::~WinTCP() {
-	if (wsa_startup_success) {
+	if (wsaStartupSuccess) {
 		WSACleanup();
 	}
 }
 
-WinSock* WinTCP::tcp_connect(string server_addr, string service_port, bool blocking) {
+WinSock* WinTCP::tcpConnect(string server_addr, string service_port, bool blocking) {
 	SOCKET sock_conn = INVALID_SOCKET;
 	WinSock* winsock = nullptr;
 
@@ -88,7 +88,7 @@ WinSock* WinTCP::tcp_connect(string server_addr, string service_port, bool block
 	return winsock;
 }
 
-WinAcceptSock* WinTCP::tcp_create_listener(std::string server_addr, std::string service_port, bool blocking) {
+WinAcceptSock* WinTCP::tcpCreateListener(std::string server_addr, std::string service_port, bool blocking) {
 	SOCKET sock_listen = INVALID_SOCKET;
 	WinAcceptSock* winsock = nullptr;
 	struct addrinfo* res_addr = nullptr;

@@ -15,7 +15,7 @@ WinAcceptSock::WinAcceptSock(SOCKET _sock, bool _is_blocking) {
 
 	if (sock == INVALID_SOCKET)
 		return;
-	if(!switch_blocking_mode(is_blocking, true))
+	if(!switchBlockingMode(is_blocking, true))
 		close();
 }
 
@@ -23,7 +23,7 @@ WinAcceptSock::~WinAcceptSock() {
 	close();
 }
 
-WinSock* WinAcceptSock::accept_block() {
+WinSock* WinAcceptSock::acceptBlock() {
 	SOCKET sock_client = INVALID_SOCKET;
 	WinSock* winsock = nullptr;
 	bool success = false;
@@ -35,7 +35,7 @@ WinSock* WinAcceptSock::accept_block() {
 			dprintf("[accept_block] Tried accept_block on INVALID_SOCKET");
 			break;
 		}
-		if (!switch_blocking_mode(true)) {
+		if (!switchBlockingMode(true)) {
 			dprintf("[accept_block] Failed to change socket to blocking mode");
 			break;
 		}
@@ -56,7 +56,7 @@ WinSock* WinAcceptSock::accept_block() {
 	return winsock;
 }
 
-bool WinAcceptSock::accept_nonblock(WinSock*& res) {
+bool WinAcceptSock::acceptNonblock(WinSock*& res) {
 	SOCKET sock_client = INVALID_SOCKET;
 	WinSock* winsock = nullptr;
 	bool success = false;
@@ -69,7 +69,7 @@ bool WinAcceptSock::accept_nonblock(WinSock*& res) {
 			dprintf("Tried accept_block on INVALID_SOCKET");
 			break;
 		}
-		if (!switch_blocking_mode(false)) {
+		if (!switchBlockingMode(false)) {
 			dprintf("Failed to change socket to non-blocking mode");
 			break;
 		}

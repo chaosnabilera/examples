@@ -51,7 +51,7 @@ void encrypt_file(string src, string dst) {
 			printf("failed to open %s for read\n", src.c_str());
 			break;
 		}
-		if (!ifile->fileSize(ifile_content_size)) {
+		if (!ifile->fileSize(&ifile_content_size)) {
 			printf("failed to get file size of %s\n", src.c_str());
 			break;
 		}
@@ -66,7 +66,7 @@ void encrypt_file(string src, string dst) {
 		buffer = std::shared_ptr<BYTE>(new BYTE[buffer_size], std::default_delete<BYTE[]>());
 		memset(buffer.get(), 0, buffer_size);
 
-		if (!ifile->readBytes(buffer.get(), buffer_size, ifile_content_size, ifile_read_result)) {
+		if (!ifile->readBytes(buffer.get(), buffer_size, ifile_content_size, &ifile_read_result)) {
 			printf("failed reading from %s\n", src.c_str());
 			break;
 		}
@@ -134,7 +134,7 @@ void decrypt_file(string src, string dst) {
 			printf("failed to open %s for read\n", src.c_str());
 			break;
 		}
-		if (!ifile->fileSize(ifile_content_size)) {
+		if (!ifile->fileSize(&ifile_content_size)) {
 			printf("failed to get file size of %s\n", src.c_str());
 			break;
 		}
@@ -146,7 +146,7 @@ void decrypt_file(string src, string dst) {
 
 		ifile_content = std::shared_ptr<BYTE>(new BYTE[ifile_content_size], std::default_delete<BYTE[]>());
 
-		if (!ifile->readBytes(ifile_content.get(), ifile_content_size, ifile_content_size, ifile_read_result)) {
+		if (!ifile->readBytes(ifile_content.get(), ifile_content_size, ifile_content_size, &ifile_read_result)) {
 			printf("failed reading from %s\n", src.c_str());
 			break;
 		}
@@ -155,7 +155,7 @@ void decrypt_file(string src, string dst) {
 			printf("failed aes decryption\n");
 			break;
 		}
-		printf("decrypted size of %s: %u\n", src.c_str(), ifile_decrypted_size);
+		printf("decrypted size of %s: %lld\n", src.c_str(), ifile_decrypted_size);
 
 		if (!sha256->update(ifile_content.get(), ifile_decrypted_size)) {
 			printf("failed sha256->update\n");

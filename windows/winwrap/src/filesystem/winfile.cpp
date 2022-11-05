@@ -12,21 +12,21 @@ WinFile::~WinFile() {
 	CloseHandle(hFile);
 }
 
-bool WinFile::fileSize(long long& out_filesize) {
+bool WinFile::fileSize(long long* out_filesize) {
 	bool res;
 	LARGE_INTEGER li;
 	if ((res = GetFileSizeEx(hFile, &li))) {
-		out_filesize = li.QuadPart;
+		*out_filesize = li.QuadPart;
 	}
 	return res;
 }
 
-bool WinFile::getPos(long long& out_pos) {
+bool WinFile::getPos(long long* out_pos) {
 	bool res;
 	LARGE_INTEGER li_zero = { 0 };
 	LARGE_INTEGER li_pos;
 	if ((res = SetFilePointerEx(hFile, li_zero, &li_pos, FILE_CURRENT))) {
-		out_pos = li_pos.QuadPart;
+		*out_pos = li_pos.QuadPart;
 	}
 	return res;
 }
@@ -48,14 +48,14 @@ bool WinFile::setPosToEnd() {
 	return SetFilePointerEx(hFile, li_zero, &li_pos, FILE_END);
 }
 
-bool WinFile::readBytes(BYTE* outbuf, long long outbuf_len, long long readlen, long long& resultcnt) {
+bool WinFile::readBytes(BYTE* outbuf, long long outbuf_len, long long readlen, long long* out_readcnt) {
 	bool success = false;
 	long long bytes_read = 0;
 	DWORD error = ERROR_SUCCESS;
 	DWORD to_read = 0;
 	DWORD did_read = 0;
 
-	resultcnt = 0;
+	*out_readcnt = 0LL;
 	do {
 		if (outbuf_len < readlen) {
 			dprintf("[WinFile::read] outbuf_len(%lld) < readlen(%lld)", outbuf_len, readlen);
@@ -78,7 +78,7 @@ bool WinFile::readBytes(BYTE* outbuf, long long outbuf_len, long long readlen, l
 		if (error != ERROR_SUCCESS) {
 			break;
 		}
-		resultcnt = bytes_read;
+		*out_readcnt = bytes_read;
 		success = true;
 	} while (0);
 
@@ -111,17 +111,17 @@ bool WinFile::writeBytes(BYTE* inbuf, long long inbuf_len) {
 	return success;
 }
 
-bool WinFile::readAll(std::pair<std::shared_ptr<BYTE>, long long>& out_pair) {
+bool WinFile::readAll(std::shared_ptr<BYTE>* out_buf, long long* out_buflen) {
 	bool result = false;
 	long long cur_filesize = 0;
 	BYTE* new_alloc = nullptr;
 	shared_ptr<BYTE> buf(nullptr);
 
 	long long curpos = 0;
-	long long read_result = 0;
+	long long readcnt = 0;
 
 	do {
-		if (!fileSize(cur_filesize)) {
+		if (!fileSize(&cur_filesize)) {
 			dprintf("[WinFile::readAll] failed to get filesize");
 			break;
 		}
@@ -132,7 +132,7 @@ bool WinFile::readAll(std::pair<std::shared_ptr<BYTE>, long long>& out_pair) {
 
 		buf = shared_ptr<BYTE>(new_alloc, free);
 
-		if (!getPos(curpos)) {
+		if (!getPos(&curpos)) {
 			dprintf("[WinFile::readAll] failed to get current position");
 			break;
 		}
@@ -140,7 +140,7 @@ bool WinFile::readAll(std::pair<std::shared_ptr<BYTE>, long long>& out_pair) {
 			dprintf("[WinFile::readAll] failed to set position to beginning");
 			break;
 		}
-		if (!readBytes(new_alloc, cur_filesize, cur_filesize, read_result)) {
+		if (!readBytes(new_alloc, cur_filesize, cur_filesize, &readcnt)) {
 			dprintf("[WinFile::readAll] read %lld bytes failed", cur_filesize);
 			break;
 		}
@@ -149,8 +149,8 @@ bool WinFile::readAll(std::pair<std::shared_ptr<BYTE>, long long>& out_pair) {
 			break;
 		}
 		
-		out_pair.first = buf;
-		out_pair.second = cur_filesize;
+		*out_buf = buf;
+		*out_buflen = cur_filesize;
 		result = true;
 	} while (0);
 

@@ -8,35 +8,35 @@ using namespace std;
 
 void run_echoclient_blockio(string server_addr, string server_port) {
 	WinSock* conn = nullptr;
-	WinTCP& wintcp = WinTCP::get_instance();
+	WinTCP& wintcp = WinTCP::getInstance();
 	string line;
 	int linelen, recvlen;
 	size_t sendcnt, recvcnt;
 	char recvbuf[0x1000];
 
 	do {
-		if ((conn = wintcp.tcp_connect(server_addr, server_port, true)) == nullptr) {
+		if ((conn = wintcp.tcpConnect(server_addr, server_port, true)) == nullptr) {
 			dprintf("[run_echoclient_blockio] wintcp.tcp_connect(%s,%s) failed", server_addr.c_str(), server_port.c_str());
 			break;
 		}
-		printf("Connected to %s:%d\n", conn->get_ip().c_str(), conn->get_port());
+		printf("Connected to %s:%d\n", conn->getIP().c_str(), conn->getPort());
 		while (true) {
 			printf(">>");
 			getline(cin, line);
 			linelen = line.size();
-			if (!conn->send_all_block(sizeof(int), (char*)&linelen, sizeof(int), sendcnt)) {
+			if (!conn->sendAllBlock(sizeof(int), (char*)&linelen, sizeof(int), sendcnt)) {
 				dprintf("[run_echoclient_blockio] send linelen failed");
 				break;
 			}
-			if (!conn->send_all_block(line.size(), (char*)line.c_str(), line.size(), sendcnt)) {
+			if (!conn->sendAllBlock(line.size(), (char*)line.c_str(), line.size(), sendcnt)) {
 				dprintf("[run_echoclient_blockio] send content failed");
 				break;
 			}
-			if (!conn->recv_all_block(sizeof(int), (char*)&recvlen, sizeof(int), recvcnt)) {
+			if (!conn->recvAllBlock(sizeof(int), (char*)&recvlen, sizeof(int), recvcnt)) {
 				dprintf("[run_echoclient_blockio] recv recvlen failed");
 				break;
 			}
-			if (!conn->recv_all_block(recvlen, recvbuf, sizeof(recvbuf), recvcnt)) {
+			if (!conn->recvAllBlock(recvlen, recvbuf, sizeof(recvbuf), recvcnt)) {
 				dprintf("[run_echoclient_blockio] recv content failed");
 				break;
 			}
@@ -52,7 +52,7 @@ void run_echoclient_blockio(string server_addr, string server_port) {
 
 void run_echoclient_nonblockio(string server_addr, string server_port) {
 	WinSock* conn = nullptr;
-	WinTCP& wintcp = WinTCP::get_instance();
+	WinTCP& wintcp = WinTCP::getInstance();
 	string line;
 	int linelen, recvlen;
 	size_t sendcnt, recvcnt;
@@ -60,28 +60,28 @@ void run_echoclient_nonblockio(string server_addr, string server_port) {
 	const int timeout_ms = 1000; // 1sec
 
 	do {
-		if ((conn = wintcp.tcp_connect(server_addr, server_port, false)) == nullptr) {
+		if ((conn = wintcp.tcpConnect(server_addr, server_port, false)) == nullptr) {
 			dprintf("[run_echoclient_nonblockio] wintcp.tcp_connect(%s,%s) failed", server_addr.c_str(), server_port.c_str());
 			break;
 		}
-		printf("Connected to %s:%d\n", conn->get_ip().c_str(), conn->get_port());
+		printf("Connected to %s:%d\n", conn->getIP().c_str(), conn->getPort());
 		while (true) {
 			printf(">>");
 			getline(cin, line);
 			linelen = line.size();
-			if (!conn->send_all_nonblock(sizeof(int), (char*)&linelen, sizeof(int), timeout_ms, sendcnt)) {
+			if (!conn->sendAllNonblock(sizeof(int), (char*)&linelen, sizeof(int), timeout_ms, sendcnt)) {
 				dprintf("send linelen failed");
 				break;
 			}
-			if (!conn->send_all_nonblock(line.size(), (char*)line.c_str(), line.size(), timeout_ms, sendcnt)) {
+			if (!conn->sendAllNonblock(line.size(), (char*)line.c_str(), line.size(), timeout_ms, sendcnt)) {
 				dprintf("send content failed");
 				break;
 			}
-			if (!conn->recv_all_nonblock(sizeof(int), (char*)&recvlen, sizeof(int), timeout_ms, recvcnt)) {
+			if (!conn->recvAllNonblock(sizeof(int), (char*)&recvlen, sizeof(int), timeout_ms, recvcnt)) {
 				dprintf("recv recvlen failed");
 				break;
 			}
-			if (!conn->recv_all_nonblock(recvlen, recvbuf, sizeof(recvbuf), timeout_ms, recvcnt)) {
+			if (!conn->recvAllNonblock(recvlen, recvbuf, sizeof(recvbuf), timeout_ms, recvcnt)) {
 				dprintf("recv content failed");
 				break;
 			}

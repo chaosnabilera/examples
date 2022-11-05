@@ -15,7 +15,7 @@ bool WWGetNextInputWord(std::wstring& out_word) {
 	std::shared_ptr<WCHAR> wcline(nullptr);
 	
 	assign_cnt = scanf("%s", mbline);
-	if (!WinEncoding::convertMultiByteToWCHAR(mbline, wcline)) {
+	if (!WinEncoding::convertMultiByteToWCHAR(mbline, &wcline)) {
 		printf("Unable to convert input to WCHAR\n");
 		return false;
 	}
@@ -141,18 +141,18 @@ bool WWPrintCurrentWorkingDirectory() {
 	SYSTEMTIME last_write_time = { 0 };
 	
 	do {
-		if (!WinPath::getAbsPathW(cur, cur_abspath)) {
+		if (!WinPath::getAbsPathW(cur, &cur_abspath)) {
 			printf("[WWPrintCurrentWorkingDirectory] getAbsPathW current working directory failed\n");
 			break;
 		}
-		if (!WinPath::listDirW(cur_abspath, pathlist)) {
+		if (!WinPath::listDirW(cur_abspath, &pathlist)) {
 			printf("[WWPrintCurrentWorkingDirectory] WinPath::listDirW(%S) failed\n", cur_abspath.c_str());
 			break;
 		}
 		
 		pathlist_result = true;
 		for (std::wstring& sub : pathlist) {
-			if (!WinPath::getAbsPathW(sub, sub_abspath)) {
+			if (!WinPath::getAbsPathW(sub, &sub_abspath)) {
 				printf("[WWPrintCurrentWorkingDirectory] WinPath::getAbsPathW %S failed\n", sub.c_str());
 				break;
 			}
@@ -190,10 +190,8 @@ bool WWPrintCurrentWorkingDirectory() {
 void WWCopyFileSimple(std::string src, std::string dst) {
 	WinFile* ifile = nullptr;
 	WinFile* ofile = nullptr;
-	std::pair<std::shared_ptr<BYTE>, long long> ifile_content;
-	BYTE* ifile_buf = nullptr;
-	long long ifile_buf_len = 0;
-	
+	std::shared_ptr<BYTE> ifile_buf(nullptr);
+	long long ifile_buflen = 0LL;
 
 	do {
 		if (!WinPath::isFileA(src)) {
@@ -205,22 +203,19 @@ void WWCopyFileSimple(std::string src, std::string dst) {
 			break;
 		}
 
-		if (!ifile->readAll(ifile_content)) {
+		if (!ifile->readAll(&ifile_buf, &ifile_buflen)) {
 			printf("failed to read_all %s\n", src.c_str());
 			break;
 		}
-		
-		ifile_buf = ifile_content.first.get();
-		ifile_buf_len = ifile_content.second;
 
-		printf("size of %s: %lld\n", src.c_str(), ifile_buf_len);
+		printf("size of %s: %lld\n", src.c_str(), ifile_buflen);
 
 		if ((ofile = WinPath::openFileA(dst, "w")) == nullptr) {
 			printf("failed to open %s for write\n", src.c_str());
 			break;
 		}
 
-		if (!(ofile->writeBytes(ifile_buf, ifile_buf_len))) {
+		if (!(ofile->writeBytes(ifile_buf.get(), ifile_buflen))) {
 			printf("failed to write to %s\n", dst.c_str());
 			break;
 		}

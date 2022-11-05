@@ -6,9 +6,6 @@
 #include "dprintf.hpp"
 #include "winwrap_filesystem.h"
 
-// doesn't support UNC path. Local path only
-static std::shared_ptr<WCHAR> toPCZZWSTR(std::wstring& path);
-
 static bool shellSrcDstCommonOperationA(UINT op, std::string& src, std::string& dst, bool overwrite);
 static bool shellSrcDstCommonOperationW(UINT op, std::wstring& src, std::wstring& dst, bool overwrite);
 
@@ -195,11 +192,11 @@ bool WinPath::setCWDW(std::wstring& path) {
 	return res;
 }
 
-bool WinPath::getAbsPathA(std::string& in, std::string& out) {
+bool WinPath::getAbsPathA(std::string& in, std::string* out) {
 	DWORD char_cnt = 0;
 	DWORD copycnt = 0;
 	std::shared_ptr<char> buf(nullptr);
-	char* filepart = nullptr;
+	char* filepart = nullptr; // filepart does not need extra buffer. it points to a location in resulting full path
 	bool res = false;
 	do {
 		if ((char_cnt = GetFullPathNameA(in.c_str(), 0, nullptr, &filepart)) == 0) {
@@ -214,18 +211,18 @@ bool WinPath::getAbsPathA(std::string& in, std::string& out) {
 			break;
 		}
 
-		out = buf.get();
+		*out = buf.get();
 		res = true;
 	} while (0);
 
 	return res;
 }
 
-bool WinPath::getAbsPathW(std::wstring& in, std::wstring& out) {
+bool WinPath::getAbsPathW(std::wstring& in, std::wstring* out) {
 	DWORD wchar_cnt = 0;
 	DWORD copycnt = 0;
 	std::shared_ptr<WCHAR> wbuf(nullptr);
-	WCHAR* filepart = nullptr;
+	WCHAR* filepart = nullptr; // filepart does not need extra buffer. it points to a location in resulting full path
 	bool res = false;
 	do {
 		if ((wchar_cnt = GetFullPathNameW(in.c_str(), 0, nullptr, &filepart)) == 0) {
@@ -240,20 +237,20 @@ bool WinPath::getAbsPathW(std::wstring& in, std::wstring& out) {
 			break;
 		}
 
-		out = wbuf.get();
+		*out = wbuf.get();
 		res = true;
 	} while (0);
 
 	return res;
 }
 
-bool WinPath::listDirA(std::string& dir, std::vector<std::string>& res) {
+bool WinPath::listDirA(std::string& dir, std::vector<std::string>* res) {
 	bool success = false;
 	HANDLE hfind = INVALID_HANDLE_VALUE;
 	WIN32_FIND_DATAA ffd;
 
 	do {
-		if (!WinPath::isDirA(dir)) {
+		if (!isDirA(dir)) {
 			dprintf("[WinPath::listDirA] %s is not a directory", dir.c_str());
 			break;
 		}
@@ -265,9 +262,9 @@ bool WinPath::listDirA(std::string& dir, std::vector<std::string>& res) {
 			break;
 		}
 
-		res.clear();
+		res->clear();
 		do {
-			res.push_back(ffd.cFileName);
+			res->push_back(ffd.cFileName);
 		} while (FindNextFileA(hfind, &ffd) != 0);
 
 		FindClose(hfind);
@@ -277,13 +274,13 @@ bool WinPath::listDirA(std::string& dir, std::vector<std::string>& res) {
 	return success;
 }
 
-bool WinPath::listDirW(std::wstring& dir, std::vector<std::wstring>& res) {
+bool WinPath::listDirW(std::wstring& dir, std::vector<std::wstring>* res) {
 	bool success = false;
 	HANDLE hfind = INVALID_HANDLE_VALUE;
 	WIN32_FIND_DATAW ffd;
 
 	do {
-		if (!WinPath::isDirW(dir)) {
+		if (!isDirW(dir)) {
 			dprintf("[WinPath::listDirW] %S is not a directory", dir.c_str());
 			break;
 		}
@@ -295,9 +292,9 @@ bool WinPath::listDirW(std::wstring& dir, std::vector<std::wstring>& res) {
 			break;
 		}
 
-		res.clear();
+		res->clear();
 		do {
-			res.push_back(ffd.cFileName);
+			res->push_back(ffd.cFileName);
 		} while (FindNextFileW(hfind, &ffd) != 0);
 
 		FindClose(hfind);
@@ -425,7 +422,7 @@ bool WinPath::createDirA(std::string& path) {
 bool WinPath::createDirW(std::wstring& path) {
 	std::wstring abspath;
 
-	if (!getAbsPathW(path, abspath)) {
+	if (!getAbsPathW(path, &abspath)) {
 		dprintf("[WinPath::createDirW] getAbsPathW failed : %S", path.c_str());
 		return false;
 	}
@@ -438,7 +435,7 @@ bool WinPath::createDirW(std::wstring& path) {
 	if (isDirW(abspath))
 		return true;
 
-	for (int i = abspath.length() - 1; i >= 0; --i) {
+	for (size_t i = abspath.length() - 1; i >= 0; --i) {
 		if (abspath[i] == L'\\' || abspath[i] == L'/') {
 			std::wstring subpath = abspath.substr(0, i);
 			if (createDirW(subpath)) {
@@ -476,24 +473,34 @@ bool WinPath::deleteFileW(std::wstring& path) {
 	return true;
 }
 
-std::shared_ptr<WCHAR> toPCZZWSTR(std::wstring& path) {
-	std::vector<WCHAR> v;
-	std::shared_ptr<WCHAR> result;
+std::shared_ptr<WCHAR> WinPath::toPCZZWSTR(std::wstring& path) {
+	std::shared_ptr<WCHAR> result(nullptr);
+	
+	result = std::shared_ptr<WCHAR>(new WCHAR[path.length() + 2], std::default_delete<WCHAR[]>());
+	memcpy(result.get(), path.c_str(), sizeof(WCHAR) * path.length());
+	result.get()[path.length()] = L'\0';
+	result.get()[path.length() + 1] = L'\0';
+	
+	return result;
+}
 
-	for (size_t i = 0; i < path.length(); ++i) {
-		if (path[i] == L'\\' || path[i] == L'/') {
-			if (v.size() > 0 && v.back() != L'\0')
-				v.push_back(L'\0');
-		}
-		else {
-			v.push_back(path[i]);
-		}
+std::shared_ptr<WCHAR> WinPath::toPCZZWSTR(std::vector<std::wstring>& pathlist) {
+	std::shared_ptr<WCHAR> result(nullptr);
+	size_t total_length = 0;
+	size_t offset = 0;
+
+	for (auto& path : pathlist) {
+		total_length += (path.length() + 2);
 	}
 
-	result = std::shared_ptr<WCHAR>(new WCHAR[v.size() + 2], std::default_delete<WCHAR[]>());
-	memcpy(result.get(), &v[0], sizeof(WCHAR) * v.size());
-	result.get()[v.size()] = L'\0';
-	result.get()[v.size() + 1] = L'\0';
+	result = std::shared_ptr<WCHAR>(new WCHAR[total_length], std::default_delete<WCHAR[]>());
+	
+	for (auto& path : pathlist) {
+		memcpy(result.get() + offset, path.c_str(), sizeof(WCHAR) * path.length());
+		result.get()[offset + path.length()] = L'\0';
+		result.get()[offset + path.length() + 1] = L'\0';
+		offset += path.length() + 2;
+	}
 
 	return result;
 }
@@ -595,8 +602,8 @@ bool shellSrcDstCommonOperationW(UINT op, std::wstring& src, std::wstring& dst, 
 	std::shared_ptr<WCHAR> dst_pczzwstr;
 	int error_code = 0;
 
-	src_pczzwstr = toPCZZWSTR(src);
-	dst_pczzwstr = toPCZZWSTR(dst);
+	src_pczzwstr = WinPath::toPCZZWSTR(src);
+	dst_pczzwstr = WinPath::toPCZZWSTR(dst);
 
 	fileop.hwnd = NULL;
 	fileop.wFunc = op;

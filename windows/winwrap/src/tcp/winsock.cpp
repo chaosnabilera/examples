@@ -17,7 +17,7 @@ WinSock::WinSock(SOCKET _sock, sockaddr* _addr, bool _is_blocking) {
 
 	if (sock == INVALID_SOCKET)
 		return;
-	if (!switch_blocking_mode(is_blocking, true))
+	if (!switchBlockingMode(is_blocking, true))
 		close();
 	
 	int sin_family = ((struct sockaddr_in*)_addr)->sin_family;
@@ -44,7 +44,7 @@ WinSock::~WinSock() {
 	close();
 }
 
-bool WinSock::recv_all_block(size_t recvlen, char* buf, size_t buflen, size_t& recvcnt) {
+bool WinSock::recvAllBlock(size_t recvlen, char* buf, size_t buflen, size_t& recvcnt) {
 	const size_t max_readsize_per_recv = 0x10000000;
 	bool success = false;
 	int recvres = -1;
@@ -54,7 +54,7 @@ bool WinSock::recv_all_block(size_t recvlen, char* buf, size_t buflen, size_t& r
 			dprintf("buflen(%llu) smaller than recvlen");
 			break;
 		}
-		if (!switch_blocking_mode(true)) {
+		if (!switchBlockingMode(true)) {
 			dprintf("Failed to change socket to blocking mode");
 			break;
 		}
@@ -79,7 +79,7 @@ bool WinSock::recv_all_block(size_t recvlen, char* buf, size_t buflen, size_t& r
 	return success;
 }
 
-bool WinSock::send_all_block(size_t sendlen, char* buf, size_t buflen, size_t& sendcnt) {
+bool WinSock::sendAllBlock(size_t sendlen, char* buf, size_t buflen, size_t& sendcnt) {
 	const size_t max_sendsize_per_recv = 0x10000000;
 	bool success = false;
 	int sendres = -1;
@@ -89,7 +89,7 @@ bool WinSock::send_all_block(size_t sendlen, char* buf, size_t buflen, size_t& s
 			dprintf("buflen(%llu) smaller than recvlen");
 			break;
 		}
-		if (!switch_blocking_mode(true)) {
+		if (!switchBlockingMode(true)) {
 			dprintf("Failed to change socket to blocking mode");
 			break;
 		}
@@ -110,7 +110,7 @@ bool WinSock::send_all_block(size_t sendlen, char* buf, size_t buflen, size_t& s
 	return success;
 }
 
-bool WinSock::recv_all_nonblock(size_t recvlen, char* buf, size_t buflen, int timeout_ms, size_t& recvcnt) {
+bool WinSock::recvAllNonblock(size_t recvlen, char* buf, size_t buflen, int timeout_ms, size_t& recvcnt) {
 	const size_t max_readsize_per_recv = 0x10000000;
 	const int ms_per_sleep = (timeout_ms < 50) ? 1 : 10;
 	bool success = false;
@@ -123,7 +123,7 @@ bool WinSock::recv_all_nonblock(size_t recvlen, char* buf, size_t buflen, int ti
 			dprintf("buflen(%llu) smaller than recvlen");
 			break;
 		}
-		if (!switch_blocking_mode(false)) {
+		if (!switchBlockingMode(false)) {
 			dprintf("Failed to change socket to non-blocking mode");
 			break;
 		}
@@ -158,7 +158,7 @@ bool WinSock::recv_all_nonblock(size_t recvlen, char* buf, size_t buflen, int ti
 	return success;
 }
 
-bool WinSock::send_all_nonblock(size_t sendlen, char* buf, size_t buflen, int timeout_ms, size_t& sendcnt) {
+bool WinSock::sendAllNonblock(size_t sendlen, char* buf, size_t buflen, int timeout_ms, size_t& sendcnt) {
 	const size_t max_sendsize_per_recv = 0x10000000;
 	const int ms_per_sleep = (timeout_ms < 50) ? 1 : 10;
 	bool success = false;
@@ -171,7 +171,7 @@ bool WinSock::send_all_nonblock(size_t sendlen, char* buf, size_t buflen, int ti
 			dprintf("buflen(%llu) smaller than recvlen");
 			break;
 		}
-		if (!switch_blocking_mode(false)) {
+		if (!switchBlockingMode(false)) {
 			dprintf("Failed to change socket to non-blocking mode");
 			break;
 		}
@@ -202,10 +202,10 @@ bool WinSock::send_all_nonblock(size_t sendlen, char* buf, size_t buflen, int ti
 	return success;
 }
 
-string WinSock::get_ip() {
+string WinSock::getIP() {
 	return ip;
 }
 
-uint16_t WinSock::get_port() {
+uint16_t WinSock::getPort() {
 	return port;
 }

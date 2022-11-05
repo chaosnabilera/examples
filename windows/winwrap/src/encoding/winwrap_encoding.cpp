@@ -2,7 +2,7 @@
 
 #include "dprintf.hpp"
 
-bool WinEncoding::convertMultiByteToWCHAR(const char* in_mb, std::shared_ptr<WCHAR>& out_wchar) {
+bool WinEncoding::convertMultiByteToWCHAR(const char* in_mb, std::shared_ptr<WCHAR>* out_wchar) {
 	bool result = false;
 	UINT codepage_candidate[] = { CP_ACP, CP_UTF8, CP_THREAD_ACP, CP_OEMCP };
 
@@ -16,11 +16,11 @@ bool WinEncoding::convertMultiByteToWCHAR(const char* in_mb, std::shared_ptr<WCH
 	return false;
 }
 
-bool WinEncoding::convertMultiByteToWCHAR(const char* in_mb, UINT codepage, std::shared_ptr<WCHAR>& out_wchar)
-{
+bool WinEncoding::convertMultiByteToWCHAR(const char* in_mb, UINT codepage, std::shared_ptr<WCHAR>* out_wchar) {
 	bool result = false;
 	DWORD getlasterror = ERROR_UNHANDLED_ERROR;
 	int out_wchar_cnt = 0;
+	std::shared_ptr<WCHAR> buf(nullptr);
 
 	do {
 		if (in_mb == nullptr) {
@@ -30,19 +30,19 @@ bool WinEncoding::convertMultiByteToWCHAR(const char* in_mb, UINT codepage, std:
 			dprintf("[WinEncoding::convertMultiByteToWCHAR] MultiByteToWideChar get length failed : 0x%08x", getlasterror);
 			break;
 		}
-		out_wchar = std::shared_ptr<WCHAR>(new WCHAR[out_wchar_cnt], std::default_delete<WCHAR[]>());
-		if (MultiByteToWideChar(codepage, MB_ERR_INVALID_CHARS, in_mb, -1, out_wchar.get(), out_wchar_cnt) == 0) {
-			out_wchar.reset();
+		buf = std::shared_ptr<WCHAR>(new WCHAR[out_wchar_cnt], std::default_delete<WCHAR[]>());
+		if (MultiByteToWideChar(codepage, MB_ERR_INVALID_CHARS, in_mb, -1, buf.get(), out_wchar_cnt) == 0) {
 			dprintf("[WinEncoding::convertMultiByteToWCHAR] MultiByteToWideChar conversion failed : 0x%08x", getlasterror);
 			break;
 		}
+		*out_wchar = buf;
 		result = true;
 	} while (0);
 	
 	return result;
 }
 
-bool WinEncoding::convertWCHARtoMultiByte(const WCHAR* in_wchar, std::shared_ptr<char>& out_mb)
+bool WinEncoding::convertWCHARtoMultiByte(const WCHAR* in_wchar, std::shared_ptr<char>* out_mb)
 {
 	bool result = false;
 	UINT codepage_candidate[] = { CP_ACP, CP_UTF8, CP_THREAD_ACP, CP_OEMCP };
@@ -57,10 +57,11 @@ bool WinEncoding::convertWCHARtoMultiByte(const WCHAR* in_wchar, std::shared_ptr
 	return false;
 }
 
-bool WinEncoding::convertWCHARtoMultiByte(const WCHAR* in_wchar, UINT codepage, std::shared_ptr<char>& out_mb) {
+bool WinEncoding::convertWCHARtoMultiByte(const WCHAR* in_wchar, UINT codepage, std::shared_ptr<char>* out_mb) {
 	bool result = false;
 	DWORD getlasterror = ERROR_UNHANDLED_ERROR;
 	int out_mb_cnt = 0;
+	std::shared_ptr<char> buf(nullptr);
 
 	do {
 		if (in_wchar == nullptr) {
@@ -70,11 +71,11 @@ bool WinEncoding::convertWCHARtoMultiByte(const WCHAR* in_wchar, UINT codepage, 
 			dprintf("[WinEncoding::convertWCHARtoMultiByte] WideCharToMultiByte get length failed : 0x%08x", getlasterror);
 			break;
 		}
-		out_mb = std::shared_ptr<char>(new char[out_mb_cnt], std::default_delete<char[]>());
-		if (WideCharToMultiByte(codepage, WC_ERR_INVALID_CHARS, in_wchar, -1, out_mb.get(), out_mb_cnt, NULL, FALSE) == 0) {
-			out_mb.reset();
+		buf = std::shared_ptr<char>(new char[out_mb_cnt], std::default_delete<char[]>());
+		if (WideCharToMultiByte(codepage, WC_ERR_INVALID_CHARS, in_wchar, -1, buf.get(), out_mb_cnt, NULL, FALSE) == 0) {
 			break;
 		}
+		*out_mb = buf;
 		result = true;
 	} while (0);
 	
