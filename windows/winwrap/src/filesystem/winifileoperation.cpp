@@ -154,6 +154,7 @@ bool WinIFileOperation::movePath(std::wstring& src, std::wstring& dst, bool over
     std::wstring src_abspath, dst_abspath;
     std::wstring dst_absdir, dst_name;
     size_t idx;
+    bool created_dstdir = false;
 
     do {
         if (!WinPath::getAbsPathW(src, &src_abspath)) {
@@ -189,6 +190,24 @@ bool WinIFileOperation::movePath(std::wstring& src, std::wstring& dst, bool over
         dst_absdir = dst_abspath.substr(0, idx);
         dst_name = dst_abspath.substr(idx + 1); // either file or folder
 
+        if (WinPath::isFileW(dst_absdir)) {
+            dprintf("[WinIFileOperation::movePath] dst_absdir : %S is a file", dst_absdir.c_str());
+            break;
+        }
+        
+        // IFileOperation won't created directory for us
+        // So we have to create it manually (SHFileOperation is better...)
+        if (!WinPath::isDirW(dst_absdir)) {
+            if (WinPath::createDirW(dst_absdir)) {
+                created_dstdir = true;
+                dprintf("[WinIFileOperation::movePath] created dst_absdir %S because it didn't exist", dst_absdir.c_str());
+            }
+            else {
+                dprintf("[WinIFileOperation::movePath] creating dst_absdir %S failed");
+                break;
+            }
+        }
+
         hresult = SHCreateItemFromParsingName(dst_absdir.c_str(), NULL, IID_PPV_ARGS(&shellitem_dstdir));
         if (FAILED(hresult)) {
             dprintf("[WinIFileOperation::movePath] SHCreateItemFromParsingName dst_absdir: %S failed : 0x%08x", dst_absdir.c_str(), hresult);
@@ -217,6 +236,15 @@ bool WinIFileOperation::movePath(std::wstring& src, std::wstring& dst, bool over
         result = true;
     } while (0);
 
+    if (!result && created_dstdir) {
+        if (deletePath(dst_absdir, false)) {
+            dprintf("[WinIFileOperation::movePath] rollback creation of dst_absdir success");
+        }
+        else {
+            dprintf("[WinIFileOperation::movePath] rollback creation of dst_absdir failed");
+        }
+    }
+    
     if (shellitem_src) {
         hresult = shellitem_src->Release();
         if (FAILED(hresult)) {
@@ -240,7 +268,8 @@ bool WinIFileOperation::copyPath(std::wstring& src, std::wstring& dst, bool over
     IShellItem* shellitem_dstdir = nullptr;
     std::wstring src_abspath, dst_abspath;
     std::wstring dst_absdir, dst_name;
-    size_t idx;
+    size_t idx = 0;
+    bool created_dstdir = false;
 
     do {
         if (!WinPath::getAbsPathW(src, &src_abspath)) {
@@ -276,6 +305,24 @@ bool WinIFileOperation::copyPath(std::wstring& src, std::wstring& dst, bool over
         dst_absdir = dst_abspath.substr(0, idx);
         dst_name = dst_abspath.substr(idx + 1); // either file or folder
 
+        if (WinPath::isFileW(dst_absdir)) {
+            dprintf("[WinIFileOperation::copyPath] dst_absdir : %S is a file", dst_absdir.c_str());
+            break;
+        }
+
+        // IFileOperation won't created directory for us
+        // So we have to create it manually (SHFileOperation is better...)
+        if (!WinPath::isDirW(dst_absdir)) {
+            if (WinPath::createDirW(dst_absdir)) {
+                created_dstdir = true;
+                dprintf("[WinIFileOperation::copyPath] created dst_absdir %S because it didn't exist", dst_absdir.c_str());
+            }
+            else {
+                dprintf("[WinIFileOperation::copyPath] creating dst_absdir %S failed");
+                break;
+            }
+        }
+
         hresult = SHCreateItemFromParsingName(dst_absdir.c_str(), NULL, IID_PPV_ARGS(&shellitem_dstdir));
         if (FAILED(hresult)) {
             dprintf("[WinIFileOperation::copyPath] SHCreateItemFromParsingName dst_absdir: %S failed : 0x%08x", dst_absdir.c_str(), hresult);
@@ -304,6 +351,15 @@ bool WinIFileOperation::copyPath(std::wstring& src, std::wstring& dst, bool over
         result = true;
     } while (0);
 
+    if (!result && created_dstdir) {
+        if (deletePath(dst_absdir, false)) {
+            dprintf("[WinIFileOperation::copyPath] rollback creation of dst_absdir success");
+        }
+        else {
+            dprintf("[WinIFileOperation::copyPath] rollback creation of dst_absdir failed");
+        }
+    }
+
     if (shellitem_src) {
         hresult = shellitem_src->Release();
         if (FAILED(hresult)) {
@@ -320,11 +376,14 @@ bool WinIFileOperation::copyPath(std::wstring& src, std::wstring& dst, bool over
     return result;
 }
 
-bool WinIFileOperation::renamePath(std::wstring& src, std::wstring& dst) {
+bool WinIFileOperation::renamePath(std::wstring& src, std::wstring& dst, bool overwrite) {
     bool result = false;
     HRESULT hresult = E_UNEXPECTED;
     IShellItem* shellitem_src = nullptr;
     std::wstring src_abspath, dst_abspath;
+    std::wstring dst_absdir, dst_name;
+    size_t idx = 0;
+    bool created_dstdir = false;
 
     do {
         if (!WinPath::getAbsPathW(src, &src_abspath)) {
@@ -337,6 +396,11 @@ bool WinIFileOperation::renamePath(std::wstring& src, std::wstring& dst) {
             break;
         }
 
+        if (!overwrite && WinPath::isPathW(dst_abspath)) {
+            dprintf("[WinIFileOperation::renamePath] dst_abspath: %S already exists", dst_abspath.c_str());
+            break;
+        }
+
         hresult = SHCreateItemFromParsingName(
             src_abspath.c_str(), // [in] pszPath
             NULL,                // [in] pbc : Optional. A pointer to a bind context used to pass 
@@ -346,6 +410,31 @@ bool WinIFileOperation::renamePath(std::wstring& src, std::wstring& dst) {
         if (FAILED(hresult)) {
             dprintf("[WinIFileOperation::renamePath] SHCreateItemFromParsingName src_abspath: %S failed : 0x%08x", src_abspath.c_str(), hresult);
             break;
+        }
+        
+        if ((idx = dst_abspath.rfind(L'\\')) == std::wstring::npos) {
+            dprintf("[WinIFileOperation::renamePath] dst_abspath: %S does not contain a backslash", dst_abspath.c_str());
+            break;
+        }
+        dst_absdir = dst_abspath.substr(0, idx);
+        dst_name = dst_abspath.substr(idx + 1); // either file or folder
+
+        if (WinPath::isFileW(dst_absdir)) {
+            dprintf("[WinIFileOperation::renamePath] dst_absdir : %S is a file", dst_absdir.c_str());
+            break;
+        }
+
+        // IFileOperation would **HANG** at PerformOperations if dst_absdir doesn't exist
+        // So we have to create it manually (SHFileOperation is better...)
+        if (!WinPath::isDirW(dst_absdir)) {
+            if (WinPath::createDirW(dst_absdir)) {
+                created_dstdir = true;
+                dprintf("[WinIFileOperation::renamePath] created dst_absdir %S because it didn't exist", dst_absdir.c_str());
+            }
+            else {
+                dprintf("[WinIFileOperation::renamePath] creating dst_absdir %S failed");
+                break;
+            }
         }
 
         hresult = fileOperation->SetOperationFlags(FOF_NO_UI);
@@ -360,6 +449,7 @@ bool WinIFileOperation::renamePath(std::wstring& src, std::wstring& dst) {
             break;
         }
 
+        // Would **HANG** if dst_absdir does not exist. this really sucks
         // Actual operation happens here
         hresult = fileOperation->PerformOperations();
         if (FAILED(hresult)) {
@@ -369,6 +459,15 @@ bool WinIFileOperation::renamePath(std::wstring& src, std::wstring& dst) {
 
         result = true;
     } while (0);
+
+    if (!result && created_dstdir) {
+        if (deletePath(dst_absdir, false)) {
+            dprintf("[WinIFileOperation::copyPath] rollback creation of dst_absdir success");
+        }
+        else {
+            dprintf("[WinIFileOperation::copyPath] rollback creation of dst_absdir failed");
+        }
+    }
 
     if (shellitem_src) {
         hresult = shellitem_src->Release();

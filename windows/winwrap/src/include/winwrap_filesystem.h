@@ -85,7 +85,7 @@ public:
     bool deletePath(std::wstring& path, bool use_recycle_bin = false);
     bool movePath(std::wstring& src, std::wstring& dst, bool overwrite = false);
     bool copyPath(std::wstring& src, std::wstring& dst, bool overwrite = false);
-    bool renamePath(std::wstring& src, std::wstring& dst);
+    bool renamePath(std::wstring& src, std::wstring& dst, bool overwrite = false);
     
     // if execute_remote == true, dllhost.exe does the job for us. Otherwise current process will do the job
     static bool createWinIFileOperation(std::shared_ptr<WinIFileOperation>* out_pinstance, bool execute_remote = false);

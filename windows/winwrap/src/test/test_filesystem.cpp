@@ -23,10 +23,23 @@ bool WWGetNextInputWord(std::wstring& out_word) {
     return true;
 }
 
-void WWNavigateFileSystem() {
-    std::wstring icmd, iarg1, iarg2;    
+void WWNavigateFileSystem(bool use_ifileoperation) {
+    std::wstring icmd, iarg1, iarg2;
+    std::shared_ptr<WinIFileOperation> ifo(nullptr);
+    bool use_recycle_bin = false;
+    bool overwrite = true;
 
-    printf("Shell!\n");
+    if (use_ifileoperation) {
+        if (!WinIFileOperation::createWinIFileOperation(&ifo)) {
+            printf("[WWNavigateFileSystem] Unable to create WinIFileOperation\n");
+            return;
+        }
+        printf("[WWNavigateFileSystem] Using WinIFileOperation\n");
+    }
+    else {
+        printf("[WWNavigateFileSystem] Using SHFileOperation\n");
+    }
+    
     while (true) {
         printf("%S>", WinPath::getCWDW().c_str());
 
@@ -52,17 +65,83 @@ void WWNavigateFileSystem() {
                 printf("[WWNavigateFileSystem] WWPrintCurrentWorkingDirectory failed!\n");
             }
         }
-        else if (icmd == L"mv") {
-            if (!WWGetNextInputWord(iarg1) || !WWGetNextInputWord(iarg2))
+        else if (icmd == L"mkdir") {
+            if (!WWGetNextInputWord(iarg1)) {
                 continue;
-
-            if (WinPath::shellMovePathW(iarg1, iarg2, true)) {
-                printf("Moved %S to %S\n", iarg1.c_str(), iarg2.c_str());
+            }
+            if (WinPath::createDirW(iarg1)) {
+                printf("[WWNavigateFileSystem] mkdir %S success\n", iarg1.c_str());
             }
             else {
-                printf("Unable to move %S to %S\n", iarg1.c_str(), iarg2.c_str());
+                printf("[WWNavigateFileSystem] mkdir %S failed\n", iarg1.c_str());
             }
+        }
+        else if (icmd == L"del" || icmd == L"del_recycle") {
+            if (!WWGetNextInputWord(iarg1)) {
+                continue;
+            }
+            use_recycle_bin = (icmd == L"del_recycle");
             
+            if (use_ifileoperation) {
+                if (ifo->deletePath(iarg1, use_recycle_bin)) {
+                    printf("[WWNavigateFileSystem] ifo->deletePath %S success\n", iarg1.c_str());
+                }
+                else {
+                    printf("[WWNavigateFileSystem] ifo->deletePath %S failed\n", iarg1.c_str());
+                }
+            }
+            else {
+                if (WinPath::shellDeletePathW(iarg1, use_recycle_bin)) {
+                    printf("[WWNavigateFileSystem] WinPath::shellDeletePathW %S success\n", iarg1.c_str());
+                }
+                else {
+                    printf("[WWNavigateFileSystem] WinPath::shellDeletePathW %S failed\n", iarg1.c_str());
+                }
+            }
+        }
+        else if (icmd == L"cp") {
+            if (!WWGetNextInputWord(iarg1) || !WWGetNextInputWord(iarg2)) {
+                continue;
+            }
+
+            if (use_ifileoperation) {
+                if (ifo->copyPath(iarg1, iarg2, overwrite)) {
+                    printf("[WWNavigateFileSystem] ifo->copyPath(%S,%S) success\n", iarg1.c_str(), iarg2.c_str());
+                }
+                else {
+                    printf("[WWNavigateFileSystem] ifo->copyPath(%S,%S) failed\n", iarg1.c_str(), iarg2.c_str());
+                }
+            }
+            else {
+                if (WinPath::shellCopyPathW(iarg1, iarg2, overwrite)) {
+                    printf("[WWNavigateFileSystem] WinPath::shellCopyPathW(%S,%S) success\n", iarg1.c_str(), iarg2.c_str());
+                }
+                else {
+                    printf("[WWNavigateFileSystem] WinPath::shellCopyPathW(%S,%S) failed\n", iarg1.c_str(), iarg2.c_str());
+                }
+            }
+        }
+        else if (icmd == L"mv") {
+            if (!WWGetNextInputWord(iarg1) || !WWGetNextInputWord(iarg2)) {
+                continue;
+            }
+
+            if (use_ifileoperation) {
+                if (ifo->movePath(iarg1, iarg2, overwrite)) {
+                    printf("[WWNavigateFileSystem] ifo->movePath(%S, %S) success\n", iarg1.c_str(), iarg2.c_str());
+                }
+                else {
+                    printf("[WWNavigateFileSystem] ifo->movePath(%S, %S) failed\n", iarg1.c_str(), iarg2.c_str());
+                }
+            }
+            else {
+                if (WinPath::shellMovePathW(iarg1, iarg2, overwrite)) {
+                    printf("[WWNavigateFileSystem] WinPath::shellMovePathW(%S,%S) success\n", iarg1.c_str(), iarg2.c_str());
+                }
+                else {
+                    printf("[WWNavigateFileSystem] WinPath::shellMovePathW(%S,%S) failed\n", iarg1.c_str(), iarg2.c_str());
+                }
+            }
             /*
             if (WinPath::moveFileW(iarg1, iarg2, true)) {
                 printf("[WWNavigateFileSystem] %S -> %S success\n", iarg1.c_str(), iarg2.c_str());
@@ -72,56 +151,26 @@ void WWNavigateFileSystem() {
             }
             */
         }
-        else if (icmd == L"mkdir") {
-            if (!WWGetNextInputWord(iarg1))
-                continue;
-            if (WinPath::createDirW(iarg1)) {
-                printf("[WWNavigateFileSystem] mkdir %S success\n", iarg1.c_str());
-            }
-            else {
-                printf("[WWNavigateFileSystem] mkdir %S failed\n", iarg1.c_str());
-            }
-        }
-        else if (icmd == L"del") {
-            if (!WWGetNextInputWord(iarg1))
-                continue;
-            if (WinPath::shellDeletePathW(iarg1, false)) {
-                printf("[WWNavigateFileSystem] del %S success\n", iarg1.c_str());
-            }
-            else {
-                printf("[WWNavigateFileSystem] del %S failed\n", iarg1.c_str());
-            }
-        }
-        else if (icmd == L"del_recycle") {
-            if (!WWGetNextInputWord(iarg1))
-                continue;
-            if (WinPath::shellDeletePathW(iarg1, true)) {
-                printf("[WWNavigateFileSystem] del %S success\n", iarg1.c_str());
-            }
-            else {
-                printf("[WWNavigateFileSystem] del %S failed\n", iarg1.c_str());
-            }
-        }
-        else if (icmd == L"cp") {
-            if (!WWGetNextInputWord(iarg1) || !WWGetNextInputWord(iarg2))
-                continue;
-
-            if (WinPath::shellCopyPathW(iarg1, iarg2, true)) {
-                printf("Copied %S to %S\n", iarg1.c_str(), iarg2.c_str());
-            }
-            else {
-                printf("Unable to copy %S to %S\n", iarg1.c_str(), iarg2.c_str());
-            }
-        }
         else if (icmd == L"ren") {
-            if (!WWGetNextInputWord(iarg1) || !WWGetNextInputWord(iarg2))
+            if (!WWGetNextInputWord(iarg1) || !WWGetNextInputWord(iarg2)) {
                 continue;
-
-            if (WinPath::shellRenamePathW(iarg1, iarg2, true)) {
-                printf("Renamed %S to %S\n", iarg1.c_str(), iarg2.c_str());
+            }
+            
+            if (use_ifileoperation) {
+                if (ifo->renamePath(iarg1, iarg2, overwrite)) {
+                    printf("[WWNavigateFileSystem] ifo->renamePath(%S,%S) success\n", iarg1.c_str(), iarg2.c_str());
+                }
+                else {
+                    printf("[WWNavigateFileSystem] ifo->renamePath(%S,%S) failed\n", iarg1.c_str(), iarg2.c_str());
+                }
             }
             else {
-                printf("Unable to rename %S to %S\n", iarg1.c_str(), iarg2.c_str());
+                if (WinPath::shellRenamePathW(iarg1, iarg2, overwrite)) {
+                    printf("[WWNavigateFileSystem] WinPath::shellRenamePathW(%S,%S) success\n", iarg1.c_str(), iarg2.c_str());
+                }
+                else {
+                    printf("[WWNavigateFileSystem] WinPath::shellRenamePathW(%S,%S) failed\n", iarg1.c_str(), iarg2.c_str());
+                }
             }
         }
     }

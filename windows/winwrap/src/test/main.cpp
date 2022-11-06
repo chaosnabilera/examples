@@ -5,7 +5,7 @@
 #include <Windows.h>
 #include <locale.h>
 
-void WWNavigateFileSystem();
+void WWNavigateFileSystem(bool use_ifileoperation);
 void WWCopyFileSimple(std::string src, std::string dst);
 void run_echoclient_blockio(std::string server_addr, std::string server_port);
 void run_echoclient_nonblockio(std::string server_addr, std::string server_port);
@@ -36,7 +36,10 @@ int main(int argc, char** argv) {
         arg.push_back(argv[i]);
 
     if (arg.size() == 2 && arg[1] == "fs") {
-        WWNavigateFileSystem();
+        WWNavigateFileSystem(false);
+    }
+    else if (arg.size() == 2 && arg[1] == "fs_ifo") {
+        WWNavigateFileSystem(true);
     }
     else if (arg.size() == 4 && arg[1] == "copy") {
         WWCopyFileSimple(arg[2], arg[3]);
