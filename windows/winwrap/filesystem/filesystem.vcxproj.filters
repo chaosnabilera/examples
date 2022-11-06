@@ -21,6 +21,9 @@
     <ClCompile Include="..\src\filesystem\winfile.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\filesystem\winifileoperation.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\include\winwrap_filesystem.h">

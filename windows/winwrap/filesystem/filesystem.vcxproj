@@ -156,6 +156,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\filesystem\winfile.cpp" />
+    <ClCompile Include="..\src\filesystem\winifileoperation.cpp" />
     <ClCompile Include="..\src\filesystem\winpath.cpp" />
   </ItemGroup>
   <ItemGroup>
