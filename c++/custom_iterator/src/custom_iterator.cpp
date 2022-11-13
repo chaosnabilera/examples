@@ -29,10 +29,12 @@ CustomClass::Iterator::pointer CustomClass::Iterator::operator->() const
 }
 
 // friend functions are not member function!
+/*
 bool operator==(const CustomClass::Iterator& lhs, const CustomClass::Iterator& rhs)
 {
 	return lhs.iPtr == rhs.iPtr;
 }
+*/
 
 bool operator!=(const CustomClass::Iterator& lhs, const CustomClass::Iterator& rhs)
 {

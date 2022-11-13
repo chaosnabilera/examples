@@ -5,11 +5,10 @@
 #include <Windows.h>
 #include <ShObjIdl.h>
 
+#include <iterator>
 #include <memory>
 #include <string>
 #include <vector>
-
-
 
 class WinFile;
 
@@ -110,6 +109,32 @@ private:
     WinFile(HANDLE hfile, std::wstring& mode);
     HANDLE hFile;
     std::wstring& mode;
+};
+
+struct WinFileSystemWalkState {
+    WinFileSystemWalkState(
+        std::shared_ptr<std::wstring> path_root,
+        std::shared_ptr<std::vector<std::wstring>> file_list,
+        std::shared_ptr<std::vector<std::wstring>> dir_list
+    ) : pRoot(path_root), pFileList(file_list), pDirList(dir_list) {}
+
+    std::shared_ptr<const std::wstring> const pRoot;
+    std::shared_ptr<const std::vector<std::wstring>> const pFileList;
+    std::shared_ptr<const std::vector<std::wstring>> const pDirList;
+};
+
+class WinFileSystemWalk {
+public:
+    static bool create(std::wstring path, std::shared_ptr<WinFileSystemWalk>* out_walk);
+    static bool listDir(std::wstring path, std::shared_ptr<std::vector<std::wstring>>* out_filelist, std::shared_ptr<std::vector<std::wstring>>* out_dirlist);
+    
+    bool get(std::shared_ptr<WinFileSystemWalkState>* out_state);
+    bool advance();
+    
+private:
+    using stackElem = std::pair< std::shared_ptr<WinFileSystemWalkState>, size_t>;
+    WinFileSystemWalk(std::shared_ptr<WinFileSystemWalkState> init_state);
+    std::vector<stackElem> stack;
 };
 
 #endif
