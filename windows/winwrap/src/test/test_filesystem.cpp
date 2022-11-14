@@ -173,6 +173,24 @@ void WWNavigateFileSystem(bool use_ifileoperation) {
                 }
             }
         }
+        else if (icmd == L"walk") {
+            std::shared_ptr<WinFileSystemWalk> walk;
+            std::shared_ptr<WinFileSystemWalkState> state;
+            if (WinFileSystemWalk::create(L".", &walk)) {
+                do {
+                    if (!walk->get(&state)) {
+                        printf("[WWNavigateFileSystem] walk->get failed");
+                        break;
+                    }
+                    for (auto& dirname : *(state->pDirList)) {
+                        printf("%S\\%S\\\n", state->pRoot->c_str(), dirname.c_str());
+                    }
+                    for (auto& filename : *(state->pFileList)) {
+                        printf("%S\\%S\n",  state->pRoot->c_str(), filename.c_str());
+                    }
+                } while (walk->advance());
+            }
+        }
     }
 }
 

@@ -111,15 +111,15 @@ bool WinFileSystemWalk::advance() {
         WinFileSystemWalkState& cur = *(stack.back().first);
         size_t& cur_idx = stack.back().second; // note that this is reference
         
-        if (cur_idx == cur.pDirList->size()) {
+        if (cur_idx >= cur.pDirList->size()) {
             stack.pop_back();
             continue;
         }
         
         next_root = std::shared_ptr<std::wstring>(new std::wstring((*cur.pRoot) + L"\\" + (*cur.pDirList)[cur_idx]));
         if (listDir(*next_root, &file_list, &dir_list)) {
-            ++(stack.back().second);
             next_state = std::shared_ptr<WinFileSystemWalkState>(new WinFileSystemWalkState(next_root, file_list, dir_list));
+            stack.push_back(std::make_pair(next_state, 0));
             result = true;
         }
         else {
