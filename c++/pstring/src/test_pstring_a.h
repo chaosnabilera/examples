@@ -5,6 +5,6 @@
 void PStringATestAssignment();
 void PStringATestOperator();
 void PStringASubStringTest();
-void PStringChangecaseReplaceSplitJoinTest();
+void PStringAChangecaseReplaceSplitJoinTest();
 
 #endif

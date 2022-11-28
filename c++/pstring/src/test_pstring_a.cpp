@@ -112,7 +112,7 @@ void PStringASubStringTest() {
     printf("\n");
 }
 
-void PStringChangecaseReplaceSplitJoinTest() {
+void PStringAChangecaseReplaceSplitJoinTest() {
     PStringA text = \
         "Do not go gentle into that good night,\n"
         "Old age should burn and rave at close of day\n"
@@ -148,7 +148,7 @@ void PStringChangecaseReplaceSplitJoinTest() {
     printf("text_lower = test.lower():\n");
     printf("%s\n", text_lower.cStr());
     
-    printf("text_lower.replaceAll(\"gentle\",\"chinjul\"):\n");
+    printf("text_lower.replaceAll(\"gentle\",\"$%GENTLE@#\"):\n");
     printf("%s\n", text_lower.replaceAll("gentle", "$%GENTLE@#").cStr());
 
     text_upper = text.upper(); // not text_lower.upper()!

@@ -168,4 +168,155 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const PStringA& pstr);
 
+class PStringW {
+
+public:
+    PStringW();
+    PStringW(const wchar_t* wstr);
+    PStringW(const wchar_t* wstr, size_t wstr_len);
+    PStringW(const std::wstring& stlwstr);
+    PStringW(const PStringW& other);
+
+    ~PStringW();
+
+    PStringW& operator=(const PStringW& other);
+    PStringW operator=(const wchar_t* wstr);
+    PStringW operator=(const std::wstring& stlwstr);
+
+    PStringW operator+(const PStringW& other);
+    PStringW operator+(const wchar_t* wstr);
+    PStringW operator+(const std::wstring& stlwstr);
+
+    PStringW& operator+=(const PStringW& other);
+    PStringW& operator+=(const wchar_t* wstr);
+    PStringW& operator+=(const std::wstring& stlwstr);
+
+    bool operator==(const PStringW& other) const;
+    bool operator==(const wchar_t* wstr) const;
+    bool operator==(const std::wstring& stlwstr) const;
+
+    bool operator!=(const PStringW& other) const;
+    bool operator!=(const wchar_t* wstr) const;
+    bool operator!=(const std::wstring& stlwstr) const;
+
+    bool operator<(const PStringW& other) const;
+    bool operator<(const wchar_t* wstr) const;
+    bool operator<(const std::wstring& stlwstr) const;
+
+    bool operator<=(const PStringW& other) const;
+    bool operator<=(const wchar_t* wstr) const;
+    bool operator<=(const std::wstring& stlwstr) const;
+
+    bool operator>(const PStringW& other) const;
+    bool operator>(const wchar_t* wstr) const;
+    bool operator>(const std::wstring& stlwstr) const;
+
+    bool operator>=(const PStringW& other) const;
+    bool operator>=(const wchar_t* wstr) const;
+    bool operator>=(const std::wstring& stlwstr) const;
+
+    wchar_t operator[](size_t index) const;
+
+    const wchar_t* cStr() const;
+    std::wstring stlStr() const;
+
+    size_t length() const;
+    void clear();
+
+    PStringW substr(size_t index, size_t length) const;
+    PStringW substrFrom(size_t start_index) const;
+    PStringW substrTo(size_t end_index) const;
+    PStringW substrSlice(size_t start_index, size_t end_index) const;
+
+    bool find(const PStringW& pstr_find, size_t find_from, size_t* out_index) const;
+    bool find(const PStringW& pstr_find, size_t* out_index) const;
+    bool find(const wchar_t* wstr_find, size_t find_from, size_t* out_index) const;
+    bool find(const wchar_t* wstr_find, size_t* out_index) const;
+    bool find(const std::wstring& stlwstr_find, size_t find_from, size_t* out_index) const;
+    bool find(const std::wstring& stlwstr_find, size_t* out_index) const;
+
+    // find starting at arr[p = rfind_from]
+    // if we can't find it, --p
+    bool rfind(const PStringW& pstr_find, size_t rfind_from, size_t* out_index) const;
+    bool rfind(const PStringW& pstr_find, size_t* out_index) const;
+    bool rfind(const wchar_t* wstr_find, size_t rfind_from, size_t* out_index) const;
+    bool rfind(const wchar_t* wstr_find, size_t* out_index) const;
+    bool rfind(const std::wstring& stlwstr_find, size_t rfind_from, size_t* out_index) const;
+    bool rfind(const std::wstring& stlwstr_find, size_t* out_index) const;
+
+    // "aaa".findAll("aa") = [0] : does not count overlapping words
+    void findAll(const PStringW& pstr_find, std::vector<size_t>* out_indices) const;
+    void findAll(const wchar_t* wstr_find, std::vector<size_t>* out_indices) const;
+    void findAll(const std::wstring& stlwstr_find, std::vector<size_t>* out_indices) const;
+
+    // "aaa".count("aa") = 1 : does not count overlapping words
+    size_t count(const PStringW& pstr_find) const;
+    size_t count(const wchar_t* wstr_find) const;
+    size_t count(const std::wstring& stlwstr_find) const;
+
+    bool startsWith(const PStringW& pstr_find) const;
+    bool startsWith(const wchar_t* wstr_find) const;
+    bool startsWith(const std::wstring& stlwstr_find) const;
+
+    bool endsWith(const PStringW& pstr_find) const;
+    bool endsWith(const wchar_t* wstr_find) const;
+    bool endsWith(const std::wstring& stlwstr_find) const;
+
+    PStringW lower() const;
+    PStringW upper() const;
+
+    PStringW strip() const;
+    PStringW stripLeft() const;
+    PStringW stripRight() const;
+    // out_pstrs will be cleared
+    // if delimiter is empty, out_pstrs will contain string with only one element
+    void split(const PStringW& pstr_delimiter, std::vector<PStringW>* out_pstrs) const;
+    void split(const wchar_t* wstr_delimiter, std::vector<PStringW>* out_pstrs) const;
+    void split(const std::wstring& stlwstr_delimiter, std::vector<PStringW>* out_pstrs) const;
+    // split with isspace : different from above (does not use splitInternal) 
+    void split(std::vector<PStringW>* out_pstrs) const;
+
+    static PStringW join(std::vector<PStringW>& pstrs, const PStringW& pstr_delimiter);
+    static PStringW join(std::vector<PStringW>& pstrs, const wchar_t* wstr_delimiter);
+    static PStringW join(std::vector<PStringW>& pstrs, const std::wstring& stlwstr_delimiter);
+    static PStringW join(std::vector<wchar_t*>& wstrs, const PStringW& pstr_delimiter);
+    static PStringW join(std::vector<wchar_t*>& wstrs, const wchar_t* wstr_delimiter);
+    static PStringW join(std::vector<wchar_t*>& wstrs, const std::wstring& stlwstr_delimiter);
+    static PStringW join(std::vector<std::wstring>& stlwstrs, const PStringW& pstr_delimiter);
+    static PStringW join(std::vector<std::wstring>& stlwstrs, const wchar_t* wstr_delimiter);
+    static PStringW join(std::vector<std::wstring>& stlwstrs, const std::wstring& stlwstr_delimiter);
+
+    PStringW replaceAll(const PStringW& pstr_find, const PStringW& pstr_replace) const;
+    PStringW replaceAll(const PStringW& pstr_find, const wchar_t* wstr_replace) const;
+    PStringW replaceAll(const PStringW& pstr_find, const std::wstring& stlwstr_replace) const;
+    PStringW replaceAll(const wchar_t* wstr_find, const PStringW& pstr_replace) const;
+    PStringW replaceAll(const wchar_t* wstr_find, const wchar_t* wstr_replace) const;
+    PStringW replaceAll(const wchar_t* wstr_find, const std::wstring& stlwstr_replace) const;
+    PStringW replaceAll(const std::wstring& stlwstr_find, const PStringW& pstr_replace) const;
+    PStringW replaceAll(const std::wstring& stlwstr_find, const wchar_t* wstr_replace) const;
+    PStringW replaceAll(const std::wstring& stlwstr_find, const std::wstring& stlwstr_replace) const;
+
+private:
+    PStringW(std::shared_ptr<wchar_t> wchar_buf, size_t wchar_buf_len);
+    void createNewSelfPlusOther(const wchar_t* wstr, size_t wstrlen, std::shared_ptr<wchar_t>* out_cbuf, size_t* out_pstrlen);
+    bool findInternal(const wchar_t* wstr_find, size_t wstr_find_len, size_t find_from, size_t* out_index) const;
+    bool rfindInternal(const wchar_t* wstr_find, size_t wstr_find_len, size_t rfind_from, size_t* out_index) const;
+    void findAllInternal(const wchar_t* wstr_find, size_t wstr_find_len, std::vector<size_t>* out_indices) const;
+    size_t countInternal(const wchar_t* wstr_find, size_t wstr_find_len) const;
+    bool startsWithInternal(const wchar_t* wstr_find, size_t wstr_find_len) const;
+    bool endsWithInternal(const wchar_t* wstr_find, size_t wstr_find_len) const;
+    void splitInternal(const wchar_t* wstr_delimiter, size_t wstr_delimiter_len, std::vector<PStringW>* out_pstrs) const;
+
+    static PStringW joinInternal(std::vector<PStringW>& pstrs, const wchar_t* wstr_delimiter, size_t wstr_delimiter_len);
+    static PStringW joinInternal(std::vector<wchar_t*>& wstrs, const wchar_t* wstr_delimiter, size_t wstr_delimiter_len);
+    static PStringW joinInternal(std::vector<std::wstring>& stlstrs, const wchar_t* wstr_delimiter, size_t wstr_delimiter_len);
+
+    PStringW replaceAllInternal(const wchar_t* wstr_find, size_t wstr_find_len, const wchar_t* wstr_replace, size_t wstr_replace_len) const;
+
+    std::shared_ptr<wchar_t> cBuf;
+    size_t pStrLen; // cBuf length = pStrLen + 1
+};
+
+std::wostream& operator<<(std::wostream& os, const PStringW& pstr);
+
 #endif

@@ -131,11 +131,13 @@
     <ClCompile Include="..\src\pstring_a.cpp" />
     <ClCompile Include="..\src\pstring_w.cpp" />
     <ClCompile Include="..\src\test_pstring_a.cpp" />
+    <ClCompile Include="..\src\test_pstring_w.cpp" />
     <ClCompile Include="..\src\test_w.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\pstring.h" />
     <ClInclude Include="..\src\test_pstring_a.h" />
+    <ClInclude Include="..\src\test_pstring_w.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

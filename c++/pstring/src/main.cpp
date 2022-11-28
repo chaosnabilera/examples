@@ -2,10 +2,22 @@
 
 #include "pstring.h"
 #include "test_pstring_a.h"
+#include "test_pstring_w.h"
 
-int main(int argc, char** argv) {
+void PStringATest() {
     PStringATestAssignment();
     PStringATestOperator();
     PStringASubStringTest();
-    PStringChangecaseReplaceSplitJoinTest();
+    PStringAChangecaseReplaceSplitJoinTest();
+}
+
+void PStringWTest() {
+    PStringWTestAssignment();
+    PStringWTestOperator();
+    PStringWSubStringTest();
+    PStringWChangecaseReplaceSplitJoinTest();
+}
+
+int main(int argc, char** argv) {
+    PStringWTest();
 }
