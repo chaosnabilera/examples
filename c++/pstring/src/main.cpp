@@ -1,5 +1,11 @@
 #include <iostream>
 
+#include "pstring.h"
+#include "test_pstring_a.h"
+
 int main(int argc, char** argv) {
-    printf("hello world\n");
+    PStringATestAssignment();
+    PStringATestOperator();
+    PStringASubStringTest();
+    PStringChangecaseReplaceSplitJoinTest();
 }

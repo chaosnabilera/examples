@@ -268,16 +268,16 @@ PStringA PStringA::substrSlice(size_t start_index, size_t end_index) const {
     return substr(start_index, end_index - start_index);
 }
 
-bool PStringA::find(const char* cstr_to_find, size_t cstr_to_find_len, size_t find_from, size_t* out_index) const {
+bool PStringA::findInternal(const char* cstr_find, size_t cstr_find_len, size_t find_from, size_t* out_index) const {
     if (find_from >= pStrLen) {
         return false;
     }
     
-    if (cstr_to_find_len > pStrLen - find_from) {
+    if (cstr_find_len > pStrLen - find_from) {
         return false;
     }
     
-    const char* found = strstr(cBuf.get() + find_from, cstr_to_find);
+    const char* found = strstr(cBuf.get() + find_from, cstr_find);
     
     if (found == nullptr) {
         return false;
@@ -290,31 +290,31 @@ bool PStringA::find(const char* cstr_to_find, size_t cstr_to_find_len, size_t fi
     return true;
 }
 
-bool PStringA::find(const char* cstr_to_find, size_t find_from, size_t* out_index) const {
-    return find(cstr_to_find, strlen(cstr_to_find), find_from, out_index);
+bool PStringA::find(const char* cstr_find, size_t find_from, size_t* out_index) const {
+    return findInternal(cstr_find, strlen(cstr_find), find_from, out_index);
 }
 
-bool PStringA::find(const char* cstr_to_find, size_t* out_index) const {
-    return find(cstr_to_find, strlen(cstr_to_find), 0, out_index);
+bool PStringA::find(const char* cstr_find, size_t* out_index) const {
+    return findInternal(cstr_find, strlen(cstr_find), 0, out_index);
 }
 
-bool PStringA::find(const PStringA& pstr_to_find, size_t find_from, size_t* out_index) const {
-    return find(pstr_to_find.cBuf.get(), pstr_to_find.pStrLen, find_from, out_index);
+bool PStringA::find(const PStringA& pstr_find, size_t find_from, size_t* out_index) const {
+    return findInternal(pstr_find.cBuf.get(), pstr_find.pStrLen, find_from, out_index);
 }
 
-bool PStringA::find(const PStringA& pstr_to_find, size_t* out_index) const {
-    return find(pstr_to_find.cBuf.get(), pstr_to_find.pStrLen, 0, out_index);
+bool PStringA::find(const PStringA& pstr_find, size_t* out_index) const {
+    return findInternal(pstr_find.cBuf.get(), pstr_find.pStrLen, 0, out_index);
 }
 
-bool PStringA::find(const std::string& stlstr_to_find, size_t find_from, size_t* out_index) const {
-    return find(stlstr_to_find.c_str(), stlstr_to_find.length(), find_from, out_index);
+bool PStringA::find(const std::string& stlstr_find, size_t find_from, size_t* out_index) const {
+    return findInternal(stlstr_find.c_str(), stlstr_find.length(), find_from, out_index);
 }
 
-bool PStringA::find(const std::string& stlstr_to_find, size_t* out_index) const {
-    return find(stlstr_to_find.c_str(), stlstr_to_find.length(), 0, out_index);
+bool PStringA::find(const std::string& stlstr_find, size_t* out_index) const {
+    return findInternal(stlstr_find.c_str(), stlstr_find.length(), 0, out_index);
 }
 
-bool PStringA::rfind(const char* cstr_to_find, size_t cstr_to_find_len, size_t rfind_from, size_t* out_index) const {
+bool PStringA::rfindInternal(const char* cstr_find, size_t cstr_find_len, size_t rfind_from, size_t* out_index) const {
     bool result, match;
     size_t rbegin;
     
@@ -322,17 +322,17 @@ bool PStringA::rfind(const char* cstr_to_find, size_t cstr_to_find_len, size_t r
         return false;
     }
     
-    if (cstr_to_find_len > rfind_from+1) {
+    if (cstr_find_len > rfind_from+1) {
         return false;
     }
 
-    rbegin = (rfind_from < pStrLen - cstr_to_find_len) ? rfind_from : pStrLen - cstr_to_find_len;
+    rbegin = (rfind_from < pStrLen - cstr_find_len) ? rfind_from : pStrLen - cstr_find_len;
     result = false;
     
     for (char* p = cBuf.get() + rbegin; p >= cBuf.get(); --p) {
         match = true;
-        for (size_t i = 0; i < cstr_to_find_len; ++i) {
-            if (cstr_to_find[i] != p[i]) {
+        for (size_t i = 0; i < cstr_find_len; ++i) {
+            if (cstr_find[i] != p[i]) {
                 match = false;
                 break;
             }
@@ -347,27 +347,509 @@ bool PStringA::rfind(const char* cstr_to_find, size_t cstr_to_find_len, size_t r
     return result;
 }
 
-bool PStringA::rfind(const char* cstr_to_find, size_t rfind_from, size_t* out_index) const {
-    return rfind(cstr_to_find, strlen(cstr_to_find), rfind_from, out_index);
+bool PStringA::rfind(const char* cstr_find, size_t rfind_from, size_t* out_index) const {
+    return rfindInternal(cstr_find, strlen(cstr_find), rfind_from, out_index);
 }
 
-bool PStringA::rfind(const char* cstr_to_find, size_t* out_index) const {
-    return rfind(cstr_to_find, strlen(cstr_to_find), pStrLen - 1, out_index);
+bool PStringA::rfind(const char* cstr_find, size_t* out_index) const {
+    return rfindInternal(cstr_find, strlen(cstr_find), pStrLen - 1, out_index);
 }
 
-bool PStringA::rfind(const PStringA& pstr_to_find, size_t rfind_from, size_t* out_index) const {
-    return rfind(pstr_to_find.cBuf.get(), pstr_to_find.pStrLen, rfind_from, out_index);
+bool PStringA::rfind(const PStringA& pstr_find, size_t rfind_from, size_t* out_index) const {
+    return rfindInternal(pstr_find.cBuf.get(), pstr_find.pStrLen, rfind_from, out_index);
 }
 
-bool PStringA::rfind(const PStringA& pstr_to_find, size_t* out_index) const {
-    return rfind(pstr_to_find.cBuf.get(), pstr_to_find.pStrLen, pStrLen - 1, out_index);
+bool PStringA::rfind(const PStringA& pstr_find, size_t* out_index) const {
+    return rfindInternal(pstr_find.cBuf.get(), pstr_find.pStrLen, pStrLen - 1, out_index);
 }
 
-bool PStringA::rfind(const std::string& stlstr_to_find, size_t rfind_from, size_t* out_index) const {
-    return rfind(stlstr_to_find.c_str(), stlstr_to_find.length(), rfind_from, out_index); 
+bool PStringA::rfind(const std::string& stlstr_find, size_t rfind_from, size_t* out_index) const {
+    return rfindInternal(stlstr_find.c_str(), stlstr_find.length(), rfind_from, out_index);
 }
 
-bool PStringA::rfind(const std::string& stlstr_to_find, size_t* out_index) const {
-    return rfind(stlstr_to_find.c_str(), stlstr_to_find.length(), pStrLen - 1, out_index);
+bool PStringA::rfind(const std::string& stlstr_find, size_t* out_index) const {
+    return rfindInternal(stlstr_find.c_str(), stlstr_find.length(), pStrLen - 1, out_index);
 }
 
+void PStringA::findAllInternal(const char* cstr_find, size_t cstr_find_len, std::vector<size_t>* out_indices) const {
+    size_t index;
+    size_t find_from = 0;
+    while (findInternal(cstr_find, cstr_find_len, find_from, &index)) {
+        out_indices->push_back(index);
+        find_from = index + cstr_find_len;
+    }
+}
+
+void PStringA::findAll(const char* cstr_find, std::vector<size_t>* out_indices) const {
+    size_t cstr_find_len = strlen(cstr_find);
+    findAllInternal(cstr_find, cstr_find_len, out_indices);
+}
+
+void PStringA::findAll(const PStringA& pstr_find, std::vector<size_t>* out_indices) const {
+    const char* cstr_find = pstr_find.cStr();
+    size_t cstr_find_len = pstr_find.length();
+    findAllInternal(cstr_find, cstr_find_len, out_indices);
+}
+
+void PStringA::findAll(const std::string& stlstr_find, std::vector<size_t>* out_indices) const {
+    const char* cstr_find = stlstr_find.c_str();
+    size_t cstr_find_len = stlstr_find.length();
+    findAllInternal(cstr_find, cstr_find_len, out_indices);
+}
+
+size_t PStringA::countInternal(const char* cstr_find, size_t cstr_find_len) const {
+    size_t count = 0;
+    size_t index;
+    size_t find_from = 0;
+    while (findInternal(cstr_find, cstr_find_len, find_from, &index)) {
+        ++count;
+        find_from = index + cstr_find_len;
+    }
+    return count;
+}
+
+size_t PStringA::count(const PStringA& pstr_find) const {
+    const char* cstr_find = pstr_find.cStr();
+    size_t cstr_find_len = pstr_find.length();
+    return countInternal(cstr_find, cstr_find_len);
+}
+
+size_t PStringA::count(const char* cstr_find) const {
+    size_t cstr_find_len = strlen(cstr_find);
+    return countInternal(cstr_find, cstr_find_len);
+}
+
+size_t PStringA::count(const std::string& stlstr_find) const {
+    const char* cstr_find = stlstr_find.c_str();
+    size_t cstr_find_len = stlstr_find.length();
+    return countInternal(cstr_find, cstr_find_len);
+}
+
+bool PStringA::startsWithInternal(const char* cstr_find, size_t cstr_find_len) const {
+    if (cstr_find_len > pStrLen) {
+        return false;
+    }
+    return (memcmp(cstr_find, cBuf.get(), cstr_find_len) == 0);
+}
+
+bool PStringA::startsWith(const PStringA& pstr_find) const {
+    const char* cstr_find = pstr_find.cStr();
+    size_t cstr_find_len = pstr_find.length();
+    return startsWithInternal(cstr_find, cstr_find_len);
+}
+
+bool PStringA::startsWith(const char* cstr_find) const {
+    size_t cstr_find_len = strlen(cstr_find);
+    return startsWithInternal(cstr_find, cstr_find_len);
+}
+
+bool PStringA::startsWith(const std::string& stlstr_find) const {
+    const char* cstr_find = stlstr_find.c_str();
+    size_t cstr_find_len = stlstr_find.length();
+    return startsWithInternal(cstr_find, cstr_find_len);
+}
+
+bool PStringA::endsWithInternal(const char* cstr_find, size_t cstr_find_len) const {
+    if (cstr_find_len > pStrLen) {
+        return false;
+    }
+    return (memcmp(cstr_find, cBuf.get() + pStrLen - cstr_find_len, cstr_find_len) == 0);
+}
+
+bool PStringA::endsWith(const PStringA& pstr_find) const {
+    const char* cstr_find = pstr_find.cStr();
+    size_t cstr_find_len = pstr_find.length();
+    return endsWithInternal(cstr_find, cstr_find_len);
+}
+
+bool PStringA::endsWith(const char* cstr_find) const {
+    size_t cstr_find_len = strlen(cstr_find);
+    return endsWithInternal(cstr_find, cstr_find_len);
+}
+
+bool PStringA::endsWith(const std::string& stlstr_find) const {
+    const char* cstr_find = stlstr_find.c_str();
+    size_t cstr_find_len = stlstr_find.length();
+    return endsWithInternal(cstr_find, cstr_find_len);
+}
+
+PStringA PStringA::lower() const {
+    std::shared_ptr<char> newbuf = std::shared_ptr<char>(new char[pStrLen + 1], std::default_delete<char[]>());
+    char* src = cBuf.get();
+    char* dst = newbuf.get();
+    
+    for(size_t i=0; i< pStrLen; ++i) {
+        if (src[i] >= 'A' && src[i] <= 'Z') {
+            dst[i] = src[i] + 32; // 'a'-'A' = 97 - 65 = 32
+        }
+        else {
+            dst[i] = src[i];
+        }
+    }
+    dst[pStrLen] = '\0';
+
+    return PStringA(newbuf, pStrLen);
+}
+
+PStringA PStringA::upper() const {
+    std::shared_ptr<char> newbuf = std::shared_ptr<char>(new char[pStrLen + 1], std::default_delete<char[]>());
+    char* src = cBuf.get();
+    char* dst = newbuf.get();
+
+    for (size_t i = 0; i < pStrLen; ++i) {
+        if (src[i] >= 'a' && src[i] <= 'z') {
+            dst[i] = src[i] - 32; // 'A'-'Z' = 65 - 97 = -32
+        }
+        else {
+            dst[i] = src[i];
+        }
+    }
+    dst[pStrLen] = '\0';
+
+    return PStringA(newbuf, pStrLen);
+}
+
+PStringA PStringA::strip() const { 
+    const char* src = cBuf.get();
+    // [start,end)
+    size_t start = 0;
+    size_t end = pStrLen;
+
+    while (start < end && isspace(src[start])) {
+        ++start;
+    }
+    while (end > start && isspace(src[end-1])) {
+        --end;
+    }
+    
+    return substr(start, end - start);
+}
+
+PStringA PStringA::stripLeft() const {
+    const char* src = cBuf.get();
+    size_t start = 0;
+
+    while (start < pStrLen && isspace(src[start])) {
+        ++start;
+    }
+    return substr(start, pStrLen - start);
+}
+
+PStringA PStringA::stripRight() const {
+    const char* src = cBuf.get();
+    size_t end = pStrLen;
+
+    while (end > 0 && isspace(src[end-1])) {
+        --end;
+    }
+    return substr(0, end);
+}
+
+void PStringA::splitInternal(const char* cstr_delimiter, size_t cstr_delimiter_len, std::vector<PStringA>* out_pstrs) const {
+    size_t cur, search_end;
+    size_t search_res;
+    
+    out_pstrs->clear();
+    
+    // handle special cases
+    if (pStrLen == 0) {
+        out_pstrs->push_back(PStringA());
+    }
+    if(cstr_delimiter_len == 0) {
+        for (int i = 0; i < pStrLen; ++i) {
+            out_pstrs->push_back(substr(i, 1));
+        }
+        return;
+    }
+    if (cstr_delimiter_len > pStrLen) {
+        out_pstrs->push_back(*this);
+    }
+
+    // normal case
+    //     * pStrLen > 0
+    //     * 0 < cstr_delimiter_len <= pStrLen
+    cur = 0;
+    search_end = pStrLen - cstr_delimiter_len + 1;
+
+    while (cur < search_end) {
+        if (findInternal(cstr_delimiter, cstr_delimiter_len, cur, &search_res)) {
+            out_pstrs->push_back(substr(cur, search_res - cur));
+            cur = search_res + cstr_delimiter_len;
+        }
+        else {
+            break;
+        }
+    }
+    out_pstrs->push_back(substr(cur, pStrLen - cur));
+}
+
+void PStringA::split(const PStringA& pstr_delimiter, std::vector<PStringA>* out_pstrs) const {
+    const char* cstr_delimiter = pstr_delimiter.cStr();
+    size_t cstr_delimiter_len = pstr_delimiter.length();
+    splitInternal(cstr_delimiter, cstr_delimiter_len, out_pstrs);
+}
+
+void PStringA::split(const char* cstr_delimiter, std::vector<PStringA>* out_pstrs) const {
+    size_t cstr_delimiter_len = strlen(cstr_delimiter);
+    splitInternal(cstr_delimiter, cstr_delimiter_len, out_pstrs);
+}
+
+void PStringA::split(const std::string& stlstr_delimiter, std::vector<PStringA>* out_pstrs) const {
+    const char* cstr_delimiter = stlstr_delimiter.c_str();
+    size_t cstr_delimiter_len = stlstr_delimiter.length();
+    splitInternal(cstr_delimiter, cstr_delimiter_len, out_pstrs);
+}
+
+void PStringA::split(std::vector<PStringA>* out_pstrs) const {
+    char* src = cBuf.get();
+    size_t str_beg, cur;
+
+    out_pstrs->clear();
+
+    // special case
+    if (pStrLen == 0) {
+        out_pstrs->push_back(PStringA());
+        return;
+    }
+    
+    // normal case
+    str_beg = 0;
+    cur = 0;
+    while(cur < pStrLen) {
+        if (isspace(src[cur])) {
+            if (str_beg == cur) {
+                out_pstrs->push_back(PStringA());
+            }
+            else {
+                out_pstrs->push_back(substr(str_beg, cur - str_beg));
+            }
+            ++cur;
+            str_beg = cur;
+        }
+        else {
+            ++cur;
+        }
+    }
+    
+    out_pstrs->push_back(substr(str_beg, pStrLen - str_beg));
+    return;
+}
+
+PStringA PStringA::joinInternal(std::vector<PStringA>& pstrs, const char* cstr_delimiter, size_t cstr_delimiter_len) {
+    size_t total_len = 0;
+    size_t cur = 0;
+
+    // special case
+    if (pstrs.size() == 0) {
+        return PStringA();
+    }
+    
+    // normal case
+    for (size_t i = 0; i < pstrs.size(); ++i) {
+        total_len += pstrs[i].length();
+    }
+    total_len += (pstrs.size() - 1) * cstr_delimiter_len;
+
+    std::shared_ptr<char> newbuf = std::shared_ptr<char>(new char[total_len + 1], std::default_delete<char[]>());
+    char* dst = newbuf.get();
+    for (size_t i = 0; i < pstrs.size(); ++i) {
+        const char* src = pstrs[i].cStr();
+        size_t len = pstrs[i].length();
+        memcpy(dst + cur, src, len);
+        cur += len;
+        if (i < pstrs.size() - 1) {
+            memcpy(dst + cur, cstr_delimiter, cstr_delimiter_len);
+            cur += cstr_delimiter_len;
+        }
+    }
+    dst[total_len] = '\0';
+    
+    return PStringA(newbuf, total_len);
+}
+
+PStringA PStringA::joinInternal(std::vector<char*>& cstrs, const char* cstr_delimiter, size_t cstr_delimiter_len) {
+    std::vector<size_t> cstr_lens(cstrs.size(), 0);
+    size_t total_len = 0;
+    size_t cur = 0;
+
+    // special case
+    if (cstrs.size() == 0) {
+        return PStringA();
+    }
+    
+    // normal case
+    for (size_t i = 0; i < cstrs.size(); ++i) {
+        cstr_lens[i] = strlen(cstrs[i]);
+        total_len += cstr_lens[i];
+    }
+    total_len += (cstrs.size() - 1) * cstr_delimiter_len;
+
+    std::shared_ptr<char> newbuf = std::shared_ptr<char>(new char[total_len + 1], std::default_delete<char[]>());
+    char* dst = newbuf.get();
+    for (size_t i = 0; i < cstrs.size(); ++i) {
+        const char* src = cstrs[i];
+        size_t len = cstr_lens[i];
+        memcpy(dst + cur, src, len);
+        cur += len;
+        if (i < cstrs.size() - 1) {
+            memcpy(dst + cur, cstr_delimiter, cstr_delimiter_len);
+            cur += cstr_delimiter_len;
+        }
+    }
+    dst[total_len] = '\0';
+    
+    return PStringA(newbuf, total_len);
+}
+
+PStringA PStringA::joinInternal(std::vector<std::string>& stlstrs, const char* cstr_delimiter, size_t cstr_delimiter_len) {
+    size_t total_len = 0;
+    size_t cur = 0;
+    
+    // special case
+    if (stlstrs.size() == 0) {
+        return PStringA();
+    }
+
+    // normal case
+    for (size_t i = 0; i < stlstrs.size(); ++i) {
+        total_len += stlstrs[i].length();
+    }
+    total_len += (stlstrs.size() - 1) * cstr_delimiter_len;
+    
+    std::shared_ptr<char> newbuf = std::shared_ptr<char>(new char[total_len + 1], std::default_delete<char[]>());
+    char* dst = newbuf.get();
+    for (size_t i = 0; i < stlstrs.size(); ++i) {
+        const char* src = stlstrs[i].c_str();
+        size_t len = stlstrs[i].length();
+        memcpy(dst + cur, src, len);
+        cur += len;
+        if (i < stlstrs.size() - 1) {
+            memcpy(dst + cur, cstr_delimiter, cstr_delimiter_len);
+            cur += cstr_delimiter_len;
+        }
+    }
+    dst[total_len] = '\0';
+        
+    return PStringA(newbuf, total_len);
+}
+
+PStringA PStringA::join(std::vector<PStringA>& pstrs, const PStringA& pstr_delimiter) {
+    return joinInternal(pstrs, pstr_delimiter.cStr(), pstr_delimiter.length());
+}
+
+PStringA PStringA::join(std::vector<PStringA>& pstrs, const char* cstr_delimiter) {
+    return joinInternal(pstrs, cstr_delimiter, strlen(cstr_delimiter));
+}
+
+PStringA PStringA::join(std::vector<PStringA>& pstrs, const std::string& stlstr_delimiter) {
+    return joinInternal(pstrs, stlstr_delimiter.c_str(), stlstr_delimiter.length());
+}
+
+PStringA PStringA::join(std::vector<char*>& cstrs, const PStringA& pstr_delimiter) {
+    return joinInternal(cstrs, pstr_delimiter.cStr(), pstr_delimiter.length());
+}
+
+PStringA PStringA::join(std::vector<char*>& cstrs, const char* cstr_delimiter) {
+    return joinInternal(cstrs, cstr_delimiter, strlen(cstr_delimiter));
+}
+
+PStringA PStringA::join(std::vector<char*>& cstrs, const std::string& stlstr_delimiter) {
+    return joinInternal(cstrs, stlstr_delimiter.c_str(), stlstr_delimiter.length());
+}
+
+PStringA PStringA::join(std::vector<std::string>& pstrs, const PStringA& pstr_delimiter) {
+    return joinInternal(pstrs, pstr_delimiter.cStr(), pstr_delimiter.length());
+}
+
+PStringA PStringA::join(std::vector<std::string>& pstrs, const char* cstr_delimiter) {
+    return joinInternal(pstrs, cstr_delimiter, strlen(cstr_delimiter));
+}
+
+PStringA PStringA::join(std::vector<std::string>& pstrs, const std::string& stlstr_delimiter) {
+    return joinInternal(pstrs, stlstr_delimiter.c_str(), stlstr_delimiter.length());
+}
+
+PStringA PStringA::replaceAllInternal(const char* cstr_find, size_t cstr_find_len, const char* cstr_replace, size_t cstr_replace_len) const {
+    size_t total_len, cur, last, pos, len;
+    char* dst;
+    std::vector<size_t> positions;
+    std::shared_ptr<char> newbuf;
+    
+    last = 0;
+    while (findInternal(cstr_find, cstr_find_len, last, &pos)) {
+        positions.push_back(pos);
+        last = pos + cstr_find_len;
+    }
+    if (positions.size() == 0) {
+        return *this;
+    }
+
+    total_len = 0;
+    cur = 0;
+    for (size_t i = 0; i < positions.size(); ++i) {
+        total_len += positions[i] - cur;
+        total_len += cstr_replace_len;
+        cur = positions[i] + cstr_find_len;
+    }
+    total_len += length() - cur;
+    
+    newbuf = std::shared_ptr<char>(new char[total_len + 1], std::default_delete<char[]>());
+    dst = newbuf.get();
+    cur = 0;
+    last = 0;
+    for (size_t i = 0; i < positions.size(); ++i) {
+        pos = positions[i];
+        len = pos - last;
+        memcpy(dst + cur, cStr() + last, len);
+        cur += len;
+        memcpy(dst + cur, cstr_replace, cstr_replace_len);
+        cur += cstr_replace_len;
+        last = pos + cstr_find_len;
+    }
+    len = length() - last;
+    memcpy(dst + cur, cStr() + last, len);
+    cur += len;
+    dst[total_len] = '\0';
+    
+    return PStringA(newbuf, total_len);
+}
+
+PStringA PStringA::replaceAll(const PStringA& pstr_find, const PStringA& pstr_replace) const {
+    return replaceAllInternal(pstr_find.cStr(), pstr_find.length(), pstr_replace.cStr(), pstr_replace.length());
+}
+
+PStringA PStringA::replaceAll(const PStringA& pstr_find, const char* cstr_replace) const {
+    return replaceAllInternal(pstr_find.cStr(), pstr_find.length(), cstr_replace, strlen(cstr_replace));
+}
+
+PStringA PStringA::replaceAll(const PStringA& pstr_find, const std::string& stlstr_replace) const {
+    return replaceAllInternal(pstr_find.cStr(), pstr_find.length(), stlstr_replace.c_str(), stlstr_replace.length());
+}
+
+PStringA PStringA::replaceAll(const char* cstr_find, const PStringA& pstr_replace) const {
+    return replaceAllInternal(cstr_find, strlen(cstr_find), pstr_replace.cStr(), pstr_replace.length());
+}
+
+PStringA PStringA::replaceAll(const char* cstr_find, const char* cstr_replace) const {
+    return replaceAllInternal(cstr_find, strlen(cstr_find), cstr_replace, strlen(cstr_replace));
+}
+
+PStringA PStringA::replaceAll(const char* cstr_find, const std::string& stlstr_replace) const {
+    return replaceAllInternal(cstr_find, strlen(cstr_find), stlstr_replace.c_str(), stlstr_replace.length());
+}
+
+PStringA PStringA::replaceAll(const std::string& stlstr_find, const PStringA& pstr_replace) const {
+    return replaceAllInternal(stlstr_find.c_str(), stlstr_find.length(), pstr_replace.cStr(), pstr_replace.length());
+}
+
+PStringA PStringA::replaceAll(const std::string& stlstr_find, const char* cstr_replace) const {
+    return replaceAllInternal(stlstr_find.c_str(), stlstr_find.length(), cstr_replace, strlen(cstr_replace));
+}
+
+PStringA PStringA::replaceAll(const std::string& stlstr_find, const std::string& stlstr_replace) const {
+    return replaceAllInternal(stlstr_find.c_str(), stlstr_find.length(), stlstr_replace.c_str(), stlstr_replace.length());
+}
+
+std::ostream& operator<<(std::ostream& os, const PStringA& pstr) {
+    return os << pstr.cStr();
+}

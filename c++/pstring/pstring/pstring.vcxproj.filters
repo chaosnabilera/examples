@@ -24,7 +24,7 @@
     <ClCompile Include="..\src\pstring_w.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\test_a.cpp">
+    <ClCompile Include="..\src\test_pstring_a.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\test_w.cpp">
@@ -33,6 +33,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\pstring.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\test_pstring_a.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
