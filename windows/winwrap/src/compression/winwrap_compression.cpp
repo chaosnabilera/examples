@@ -61,3 +61,60 @@ bool WinCompressBuffered::compress(DWORD alg, const unsigned char* raw, size_t r
 
     return result;
 }
+
+bool WinCompressBuffered::decompressXPRESS(const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size) {
+    return decompress(COMPRESS_ALGORITHM_XPRESS, compressed, compressed_size, out_raw, out_raw_size);
+}
+
+bool WinCompressBuffered::decompressXPRESS_HUF(const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size) {
+    return decompress(COMPRESS_ALGORITHM_XPRESS_HUFF, compressed, compressed_size, out_raw, out_raw_size);
+}
+
+bool WinCompressBuffered::decompressMSZIP(const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size) {
+    return decompress(COMPRESS_ALGORITHM_MSZIP, compressed, compressed_size, out_raw, out_raw_size);
+}
+
+bool WinCompressBuffered::decompressLZMS(const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size) {
+    return decompress(COMPRESS_ALGORITHM_LZMS, compressed, compressed_size, out_raw, out_raw_size);
+}
+
+bool WinCompressBuffered::decompress(DWORD alg, const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size) {
+    bool result = false;
+    DECOMPRESSOR_HANDLE decompressor = NULL;
+    DWORD getlasterror = 0;
+    std::shared_ptr<unsigned char> decompressed_buf;
+    size_t decompressed_buf_len = 0;
+    size_t decompress_result_len = 0;
+
+    do {
+        if (!CreateDecompressor(alg, nullptr, &decompressor)) {
+            dprintf("[WinCompressBuffered::decompress] CreateDecompressor failed");
+            break;
+        }
+        if (Decompress(decompressor, compressed, compressed_size, nullptr, 0, &decompressed_buf_len)) {
+            dprintf("[WinCompressBuffered::decompress] First Decompress supposed to fail but didn't");
+            break;
+        }
+        if ((getlasterror = GetLastError()) != ERROR_INSUFFICIENT_BUFFER) {
+            dprintf("[WinCompressBuffered::decompress] First GetLastError supposed to return ERROR_INSUFFICIENT_BUFFER but didn't");
+            break;
+        }
+
+        decompressed_buf = std::shared_ptr<unsigned char>(new unsigned char[decompressed_buf_len], std::default_delete<unsigned char[]>());
+
+        if (!Decompress(decompressor, compressed, compressed_size, decompressed_buf.get(), decompressed_buf_len, &decompress_result_len)) {
+            dprintf("[WinCompressBuffered::decompress] Decompress failed");
+            break;
+        }
+
+        *out_raw = decompressed_buf;
+        *out_raw_size = decompress_result_len;
+        result = true;
+    } while (0);
+
+    if (decompressor) {
+        CloseDecompressor(decompressor);
+    }
+
+    return result;
+}

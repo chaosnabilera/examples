@@ -14,6 +14,7 @@ void run_echoserver_nonblockio(std::string server_addr, std::string server_port)
 void WWWincryptEncryptFile(std::string src, std::string dst);
 void WWWincryptDecryptFile(std::string src, std::string dst);
 bool WWWincryptGenerateRandomFile(std::string path, size_t size);
+bool WWTestCompression();
 
 void print_usage(std::vector<std::string>& arg) {
     printf("Usage 1: %s fs\n", arg[0].c_str());
@@ -23,6 +24,7 @@ void print_usage(std::vector<std::string>& arg) {
     printf("Usage 5: %s encrypt_file <src filepath> <dst filepath>\n", arg[0].c_str());
     printf("Usage 6: %s decrypt_file <src filepath> <dst filepath>\n", arg[0].c_str());
     printf("Usage 7: %s generate_random <target filepath> <filesize>\n", arg[0].c_str());
+    printf("Usage 8: %s test_compression\n", arg[0].c_str());
 }
 
 int main(int argc, char** argv) {
@@ -74,6 +76,9 @@ int main(int argc, char** argv) {
     }
     else if (arg.size() == 4 && arg[1] == "generate_random") {
         WWWincryptGenerateRandomFile(arg[2], std::stoi(arg[3]));
+    }
+    else if (arg.size() == 2 && arg[1] == "test_compression") {
+        WWTestCompression();
     }
     else {
         print_usage(arg);

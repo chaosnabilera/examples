@@ -3,6 +3,8 @@
 #define __WINWRAP_COMPRESSION_H__
 
 // Note : This requires Windows 8 or newer
+#include <Windows.h>
+#include <compressapi.h>
 
 #include <memory>
 #include <string>
@@ -11,6 +13,9 @@
 
 /*
 * There are 'buffered' mode and 'blocked' mode for Compression API
+* 
+* 'buffered' mode creates compressed/decompressed buffer at once
+* 'blocked' mode creates compressed/decompressed buffer block-by-block
 * 
 * It's kind of pointless to implement 'blocked' mode for
 * XPRESS, XPRESS_HUFF, MSZIP because we can't really configure
@@ -33,6 +38,7 @@
 
 class WinCompressBuffered {
 public:
+    // convenience names
     static bool compressXPRESS(const unsigned char* raw, size_t raw_size, std::shared_ptr<unsigned char>* out_compressed, size_t* out_compressed_size);
     static bool compressXPRESS_HUF(const unsigned char* raw, size_t raw_size, std::shared_ptr<unsigned char>* out_compressed, size_t* out_compressed_size);
     static bool compressMSZIP(const unsigned char* raw, size_t raw_size, std::shared_ptr<unsigned char>* out_compressed, size_t* out_compressed_size);
@@ -41,9 +47,17 @@ public:
     static bool decompressXPRESS_HUF(const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size);
     static bool decompressMSZIP(const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size);
     static bool decompressLZMS(const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size);
-private:
+
+    /* actual implementation 
+    * alg : 
+    *   - COMPRESS_ALGORITHM_XPRESS
+    *   - COMPRESS_ALGORITHM_XPRESS_HUFF
+    *   - COMPRESS_ALGORITHM_MSZIP
+    *   - COMPRESS_ALGORITHM_LZMS
+    */
     static bool compress(DWORD alg, const unsigned char* raw, size_t raw_size, std::shared_ptr<unsigned char>* out_compressed, size_t* out_compressed_size);
     static bool decompress(DWORD alg, const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size);
+private:
 };
 
 #endif
