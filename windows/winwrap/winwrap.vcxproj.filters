@@ -33,5 +33,8 @@
     <ClCompile Include="src\test\test_compression.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="src\test\test_registry.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
