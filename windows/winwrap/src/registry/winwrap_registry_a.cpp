@@ -10,7 +10,7 @@ DWORD WinRegistryA::WinRegistryValueA::toDWORD() {
 
 unsigned long long WinRegistryA::WinRegistryValueA::toQWORD() {
     unsigned long long ret = 0;
-    memcpy(&ret, data.get(), min(sizeof(DWORD), dataLen));
+    memcpy(&ret, data.get(), min(sizeof(unsigned long long), dataLen));
     return ret;
 }
 
@@ -247,7 +247,6 @@ bool WinRegistryA::enumValue(const std::string& key_abspath, std::vector<WinRegi
     bool result = false;
     std::shared_ptr<char> buf_vn;
     std::shared_ptr<BYTE> buf_data;
-    std::shared_ptr<BYTE> buf_fixed;
     HKEY hkey_target = NULL;
     DWORD sam_desired = (isWow6464) ? KEY_QUERY_VALUE | KEY_WOW64_64KEY : KEY_QUERY_VALUE | KEY_WOW64_32KEY;
     DWORD vn_len = 0;
@@ -265,58 +264,30 @@ bool WinRegistryA::enumValue(const std::string& key_abspath, std::vector<WinRegi
         out_value_list->clear();
 
         for (DWORD idx = 0; ; ++idx) {
-            vn_len = 0;
-            data_len = 0;
-
-            lstatus = RegEnumValueA(hkey_target, idx, NULL, &vn_len, NULL, NULL, NULL, &data_len);
+            // 1. get the name of value
+            vn_len = buf_vn_len;
+            lstatus = RegEnumValueA(hkey_target, idx, buf_vn.get(), &vn_len, NULL, NULL, NULL, NULL);
 
             if (lstatus == ERROR_NO_MORE_ITEMS) {
                 result = true;
                 break;
             }
-
-            if (lstatus != ERROR_MORE_DATA) {
-                dprintf("[WinRegistryA::enumValue] 1st call to RegEnumValueA did not return ERROR_MORE_DATA : 0x%08x", lstatus);
+            else if (lstatus != ERROR_SUCCESS) {
+                dprintf("[WinRegistryA::enumValue] RegEnumValueA failed : 0x%08x", lstatus);
                 break;
             }
 
-            if (vn_len >= buf_vn_len) {
-                dprintf("[WinRegistryA::enumValue] vn_len(%u) >= buf_vn_len(%u)", vn_len, buf_vn_len);
+            // 2. get the data of value
+            if ((lstatus = RegGetValueA(hkey_target, NULL, buf_vn.get(), RRF_RT_ANY, &valtype, NULL, &data_len)) != ERROR_SUCCESS) {
+                dprintf("[WinRegistryA::enumValue] 1st RegGetValueA failed : 0x%08x", lstatus);
                 break;
             }
-
-            if (data_len > 0) {
-                vn_len = buf_vn_len;
-                buf_data = std::shared_ptr<BYTE>(new BYTE[data_len], std::default_delete<BYTE[]>());
-                if ((lstatus = RegEnumValueA(hkey_target, idx, buf_vn.get(), &vn_len, NULL, &valtype, buf_data.get(), &data_len)) != ERROR_SUCCESS) {
-                    dprintf("[WinRegistryA::enumValue] 2nd call to RegEnumValueA did not return ERROR_SUCCESS : 0x%08x", lstatus);
-                    break;
-                }
-            }
-            else { // special case
-                vn_len = buf_vn_len;
-                buf_data = std::shared_ptr<BYTE>(nullptr);
-                if ((lstatus = RegEnumValueA(hkey_target, idx, buf_vn.get(), &vn_len, NULL, &valtype, NULL, NULL)) != ERROR_SUCCESS) {
-                    dprintf("[WinRegistryA::enumValue] 2nd call (data_len == 0) to RegEnumValueA did not return ERROR_SUCCESS : 0x%08x", lstatus);
-                    break;
-                }
-            }
-
-            // not using realloc is kind of lazy but I don't want manual memory management...
-            if ((valtype == REG_SZ || valtype == REG_EXPAND_SZ) && !(data_len >= 1 && buf_data.get()[data_len-1] == '\0')) {
-                buf_fixed = std::shared_ptr<BYTE>(new BYTE[data_len + 1], std::default_delete<BYTE[]>());
-                memcpy(buf_fixed.get(), buf_data.get(), data_len);
-                buf_fixed.get()[data_len] = '\0';
-                buf_data = buf_fixed;
-                data_len += 1;
-            }
-            else if ((valtype == REG_MULTI_SZ) && !(data_len >= 2 && buf_data.get()[data_len - 2] == '\0' && buf_data.get()[data_len - 1] == '\0')) {
-                buf_fixed = std::shared_ptr<BYTE>(new BYTE[data_len + 2], std::default_delete<BYTE[]>());
-                memcpy(buf_fixed.get(), buf_data.get(), data_len);
-                buf_fixed.get()[data_len]   = '\0';
-                buf_fixed.get()[data_len+1] = '\0';
-                buf_data = buf_fixed;
-                data_len += 2;
+            
+            buf_data = std::shared_ptr<BYTE>(new BYTE[data_len], std::default_delete<BYTE[]>());
+            
+            if ((lstatus = RegGetValueA(hkey_target, NULL, buf_vn.get(), RRF_RT_ANY, &valtype, buf_data.get(), &data_len)) != ERROR_SUCCESS) {
+                dprintf("[WinRegistryA::enumValue] 2nd RegGetValueA failed : 0x%08x", lstatus);
+                break;
             }
 
             out_value_list->push_back({valtype, buf_vn.get(), buf_data, data_len});
@@ -372,6 +343,93 @@ bool WinRegistryA::enumValueName(const std::string& key_abspath, std::vector<std
 
     return result;
 }
+
+bool WinRegistryA::setValue(const std::string& key_abspath, const std::string& value_name, DWORD value_type, const BYTE* data, DWORD data_len) {
+    bool result = false;
+    HKEY hkey_target = NULL;
+    DWORD sam_desired = (isWow6464) ? KEY_SET_VALUE | KEY_WOW64_64KEY : KEY_SET_VALUE | KEY_WOW64_32KEY;
+    LSTATUS lstatus = ERROR_UNHANDLED_ERROR;
+
+    do {
+        if (!openKeyHandle(key_abspath, sam_desired, &hkey_target)) {
+            dprintf("[WinRegistryA::setValue] openKeyHandle failed");
+            break;
+        }
+
+        if ((lstatus = RegSetValueExA(hkey_target, value_name.c_str(), 0, value_type, data, data_len)) != ERROR_SUCCESS) {
+            dprintf("[WinRegistryA::setValue] RegSetValueExA failed : 0x%08x", lstatus);
+            break;
+        }
+
+        result = true;
+    } while (0);
+
+    SAFE_REGCLOSEKEY(hkey_target);
+
+    return result;
+}
+
+bool WinRegistryA::getValue(const std::string& key_abspath, const std::string& value_name, WinRegistryValueA* out_value) {
+    bool result = false;
+    HKEY hkey_target = NULL;
+    DWORD sam_desired = (isWow6464) ? KEY_QUERY_VALUE | KEY_WOW64_64KEY : KEY_QUERY_VALUE | KEY_WOW64_32KEY;
+    DWORD data_len = 0;
+    DWORD valtype = 0;
+    std::shared_ptr<BYTE> buf_data;
+    LSTATUS lstatus = ERROR_UNHANDLED_ERROR;
+
+    do {
+        if (!openKeyHandle(key_abspath, sam_desired, &hkey_target)) {
+            dprintf("[WinRegistryA::getValue] openKeyHandle failed");
+            break;
+        }
+        
+        if ((lstatus = RegGetValueA(hkey_target, NULL, value_name.c_str(), RRF_RT_ANY, &valtype, NULL, &data_len)) != ERROR_SUCCESS) {
+            dprintf("[WinRegistryA::getValue] 1st RegGetValueA did not return ERROR_SUCCESS : 0x%08x", ERROR_MORE_DATA, lstatus);
+            break;
+        }
+        
+        buf_data = std::shared_ptr<BYTE>(new BYTE[data_len], std::default_delete<BYTE[]>());
+        
+        if ((lstatus = RegGetValueA(hkey_target, NULL, value_name.c_str(), RRF_RT_ANY, &valtype, buf_data.get(), &data_len)) != ERROR_SUCCESS) {
+            dprintf("[WinRegistryA::getValue] 2nd RegGetValueA did not return ERROR_SUCCESS : 0x%08x", lstatus);
+            break;
+        }
+        
+        result = true;
+        
+    } while (0);
+    
+    SAFE_REGCLOSEKEY(hkey_target);
+
+    return result;
+}
+
+bool WinRegistryA::removeValue(const std::string& key_abspath, const std::string& value_name) {
+    bool result = false;
+    HKEY hkey_target = NULL;
+    DWORD sam_desired = (isWow6464) ? KEY_SET_VALUE | KEY_WOW64_64KEY : KEY_SET_VALUE | KEY_WOW64_32KEY;
+    LSTATUS lstatus = ERROR_UNHANDLED_ERROR;
+
+    do {
+        if (!openKeyHandle(key_abspath, sam_desired, &hkey_target)) {
+            dprintf("[WinRegistryA::deleteValue] openKeyHandle failed");
+            break;
+        }
+
+        if ((lstatus = RegDeleteValueA(hkey_target, value_name.c_str())) != ERROR_SUCCESS) {
+            dprintf("[WinRegistryA::deleteValue] RegDeleteValueA failed : 0x%08x", lstatus);
+            break;
+        }
+
+        result = true;
+    } while (0);
+
+    SAFE_REGCLOSEKEY(hkey_target);
+
+    return result;
+}
+
 
 bool WinRegistryA::disasWinRegAbsPath(const std::string& key_abspath, HKEY* out_hkey_root, std::string* out_subroot_path) {
     HKEY hkey = NULL;

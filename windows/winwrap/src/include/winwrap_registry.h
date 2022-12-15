@@ -45,7 +45,7 @@ public:
     bool enumValue(const std::string& key_abspath, std::vector<WinRegistryValueA>* out_value_list);
     bool enumValueName(const std::string& key_abspath, std::vector<std::string>* out_value_name_list);
     // value_type = REG_DWORD, REG_SZ, REG_BINARY, etc.
-    bool setValue(const std::string& key_abspath, const std::string& value_name, DWORD value_type, const void* data, DWORD data_len);
+    bool setValue(const std::string& key_abspath, const std::string& value_name, DWORD value_type, const BYTE* data, DWORD data_len);
     bool getValue(const std::string& key_abspath, const std::string& value_name, WinRegistryValueA* out_value);
     bool removeValue(const std::string& key_abspath, const std::string& value_name);
 
