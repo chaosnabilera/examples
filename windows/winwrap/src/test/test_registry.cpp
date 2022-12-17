@@ -2,9 +2,12 @@
 
 void WWTestRegistryEnum();
 void WWTestCreateDelete();
+void WWTestEnumValue();
+void WWTestSetGetEnumValue();
 
 void WWTestRegistry() {
-    WWTestCreateDelete();
+    WWTestSetGetEnumValue();
+    WWTestEnumValue();
 }
 
 void WWTestRegistryExist() {
@@ -82,4 +85,104 @@ void WWTestCreateDelete() {
     else {
         printf("remove failed : %s\n", create_list[1].c_str());
     }
+}
+
+void WWTestEnumValue() {
+    WinRegistryA reg_a(WinRegistryA::WOW6464KEY);
+    std::string test_root = "HKCU\\test_setgetenum";
+    std::vector<std::string> value_names;
+    std::vector<WinRegistryValueA> values;
+
+    do {
+        if (!reg_a.enumValueName(test_root, &value_names)) {
+            printf("reg_a.enumValueName %s failed\n", test_root.c_str());
+            break;
+        }
+        printf("value names of %s:\n", test_root.c_str());
+        for (auto& s : value_names) {
+            printf("\t%s\n", s.c_str());
+        }
+
+        if (!reg_a.enumValue(test_root, &values)) {
+            printf("reg_a.enumValue %s failed\n", test_root.c_str());
+            break;
+        }
+        printf("value of %s:\n", test_root.c_str());
+        for (auto& v : values) {
+            printf("%s: %s\n", v.name.c_str(), v.descriptionString().c_str());
+        }
+    } while (0);
+}
+
+void WWTestSetGetEnumValue() {
+    WinRegistryA reg_a(WinRegistryA::WOW6464KEY);
+    std::string test_root = "HKCU\\test_setgetenum";
+    WinRegistryValueA va;
+    
+    do {
+        if (reg_a.keyExist(test_root)) {
+            if (!reg_a.removeKey(test_root, true)) {
+                printf("reg_a.removeKey %s failed\n", test_root.c_str());
+                break;
+            }
+            printf("Removed prexisting key : %s\n", test_root.c_str());
+        }
+
+        if (!reg_a.createKey(test_root)) {
+            printf("reg_a.createKey %s failed\n", test_root.c_str());
+            break;
+        }
+        
+        if (!reg_a.setValueDWORD(test_root, "vdword", 0x12345678)) {
+            printf("reg_a.setValueDWORD(vdword, 0x12345678) failed\n");
+            break;
+        }
+        if (!reg_a.getValue(test_root, "vdword", &va)) {
+            printf("reg_a.getValue vdword failed\n");
+            break;
+        }
+        printf("vdword : %s\n", va.descriptionString().c_str());
+
+        if (!reg_a.setValueQWORD(test_root, "vqword", 0x123456789abcdef0)){
+            printf("reg_a.setValueQWORD(vqword, 0x123456789abcdef0) failed\n");
+            break;
+        }
+        if (!reg_a.getValue(test_root, "vqword", &va)) {
+            printf("reg_a.getValue vqword failed\n");
+            break;
+        }
+        printf("vqword : %s\n", va.descriptionString().c_str());
+
+        if (!reg_a.setValueSZ(test_root, "vstring", "test string")) {
+            printf("reg_a.setValueSZ(vstring, test string) failed\n");
+            break;
+        }
+        if (!reg_a.getValue(test_root, "vstring", &va)) {
+            printf("reg_a.getValue vstring failed\n");
+            break;
+        }
+        printf("vstring : %s\n", va.descriptionString().c_str());
+
+        if (!reg_a.setValueExpandSZ(test_root, "vexpstring", "test expand string")) {
+            printf("reg_a.setValueExpandSZ(vexpstring, test_expand_string) failed\n");
+            break;
+        }
+        if (!reg_a.getValue(test_root, "vexpstring", &va)) {
+            printf("reg_a.getValue vexpstring failed\n");
+            break;
+        }
+        printf("vexpstring : %s\n", va.descriptionString().c_str());
+
+        if (!reg_a.setValueMultiSZ(test_root, "vmulti", { "test string1", "test string2", "test string3" })) {
+            printf("reg_a.setValueMultiSZ(vmulti, {test string1, test string2, test string3}) failed\n");
+            break;
+        }
+        if (!reg_a.getValue(test_root, "vmulti", &va)) {
+            printf("reg_a.getValue vmulti failed\n");
+            break;
+        }
+        printf("vmulti : %s\n", va.descriptionString().c_str());
+        
+    } while (0);
+    
 }

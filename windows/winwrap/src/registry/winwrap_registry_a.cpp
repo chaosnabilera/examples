@@ -2,23 +2,23 @@
 
 #include "dprintf.hpp"
 
-DWORD WinRegistryA::WinRegistryValueA::toDWORD() {
+DWORD WinRegistryValueA::toDWORD() {
     DWORD ret = 0;
     memcpy(&ret, data.get(), min(sizeof(DWORD), dataLen));
     return ret;
 }
 
-unsigned long long WinRegistryA::WinRegistryValueA::toQWORD() {
+unsigned long long WinRegistryValueA::toQWORD() {
     unsigned long long ret = 0;
     memcpy(&ret, data.get(), min(sizeof(unsigned long long), dataLen));
     return ret;
 }
 
-std::string WinRegistryA::WinRegistryValueA::toString() {
+std::string WinRegistryValueA::toString() {
     return std::string((char*)data.get(), dataLen);
 }
 
-std::vector<std::string> WinRegistryA::WinRegistryValueA::toStringVector() {
+std::vector<std::string> WinRegistryValueA::toStringVector() {
     std::vector<std::string> ret;
     char* p = (char*)data.get();
     char* end = p + dataLen;
@@ -27,6 +27,38 @@ std::vector<std::string> WinRegistryA::WinRegistryValueA::toStringVector() {
         p += strlen(p) + 1;
     }
     return ret;
+}
+
+std::string WinRegistryValueA::descriptionString() {
+    const size_t buflen = 0x1000;
+    std::shared_ptr<char> buf = std::shared_ptr<char>(new char[buflen], std::default_delete<char[]>());
+    
+    if (type == REG_DWORD) {
+        sprintf_s(buf.get(), buflen, "REG_DWORD: %u(0x%08x)", *(DWORD*)data.get(), *(DWORD*)data.get());
+    }
+    else if (type == REG_QWORD) {
+        sprintf_s(buf.get(), buflen, "REG_QWORD: %llu(0x%016llx)", *(unsigned long long*)data.get(), *(unsigned long long*)data.get());
+    }
+    else if (type == REG_SZ) {
+        sprintf_s(buf.get(), buflen, "REG_SZ: %s", data.get());
+    }
+    else if (type == REG_EXPAND_SZ) {
+        sprintf_s(buf.get(), buflen, "REG_EXPAND_SZ: %s", data.get());
+    }
+    else if (type == REG_MULTI_SZ) {
+        std::string combined;
+        char* p = (char*)data.get();
+        char* end = p + dataLen;
+        while (p < end) {
+            combined += p;
+            p += strlen(p) + 1;
+            if (p < end)
+                combined += "; ";
+        }
+        sprintf_s(buf.get(), buflen, "REG_MULTI_SZ: %s", combined.c_str());
+    }
+
+    return std::string(buf.get());
 }
 
 WinRegistryA::wow6464Key WinRegistryA::WOW6464KEY;
@@ -369,6 +401,49 @@ bool WinRegistryA::setValue(const std::string& key_abspath, const std::string& v
     return result;
 }
 
+bool WinRegistryA::setValueDWORD(const std::string& key_abspath, const std::string& value_name, const DWORD value) {
+    return setValue(key_abspath, value_name, REG_DWORD, (BYTE*)&value, sizeof(DWORD));
+}
+
+bool WinRegistryA::setValueQWORD(const std::string& key_abspath, const std::string& value_name, const unsigned long long value) {
+    return setValue(key_abspath, value_name, REG_QWORD, (BYTE*)&value, sizeof(unsigned long long));
+}
+
+bool WinRegistryA::setValueSZ(const std::string& key_abspath, const std::string& value_name, const std::string& value) {
+    return setValue(key_abspath, value_name, REG_SZ, (BYTE*)value.c_str(), (DWORD)(value.length() + 1)); // add null at end
+}
+
+bool WinRegistryA::setValueExpandSZ(const std::string& key_abspath, const std::string& value_name, const std::string& value) {
+    // somehow expandsz requires 2 nulls....
+    std::shared_ptr<char> expand_sz = std::shared_ptr<char>(new char[value.length() + 2], std::default_delete<char[]>());
+    memcpy(expand_sz.get(), value.c_str(), value.length());
+    expand_sz.get()[value.length()] = '\0';
+    expand_sz.get()[value.length()+1] = '\0';
+    
+    return setValue(key_abspath, value_name, REG_EXPAND_SZ, (BYTE*)expand_sz.get(), (DWORD)(value.length() + 2));
+}
+
+bool WinRegistryA::setValueMultiSZ(const std::string& key_abspath, const std::string& value_name, const std::vector<std::string>& value) {
+    DWORD vlen = 0;
+    DWORD offset = 0;
+    std::shared_ptr<char> multi_sz;
+    
+    for (auto& s : value) {
+        vlen += (DWORD)(s.length() + 1); // add null at end
+    }
+    ++vlen; // multi sz end with double null
+
+    multi_sz = std::shared_ptr<char>(new char[vlen], std::default_delete<char[]>());
+
+    for (auto& s : value) {
+        memcpy(multi_sz.get() + offset, s.c_str(), s.length() + 1);
+        offset += (DWORD)(s.length() + 1);
+    }
+    multi_sz.get()[vlen - 1] = '\0';
+
+    return setValue(key_abspath, value_name, REG_MULTI_SZ, (BYTE*)multi_sz.get(), vlen);
+}
+
 bool WinRegistryA::getValue(const std::string& key_abspath, const std::string& value_name, WinRegistryValueA* out_value) {
     bool result = false;
     HKEY hkey_target = NULL;
@@ -396,6 +471,7 @@ bool WinRegistryA::getValue(const std::string& key_abspath, const std::string& v
             break;
         }
         
+        *out_value = { valtype, value_name, buf_data, data_len };
         result = true;
         
     } while (0);
@@ -568,6 +644,7 @@ bool WinRegistryA::recEnumKey(HKEY hkey, std::string prefix_path, std::vector<st
         SAFE_REGCLOSEKEY(hkey_next);
     }
     // target_key is not created by this function, so it DOES NOT close it
+    return result;
 }
 
 bool WinRegistryA::openKeyHandle(const std::string& key_abspath, DWORD sam_desired, HKEY* out_key_handle) {

@@ -8,20 +8,22 @@
 #include <string>
 #include <vector>
 
+struct WinRegistryValueA {
+    DWORD type; // REG_DWORD, REG_SZ, REG_BINARY, etc.
+    std::string name;
+    std::shared_ptr<BYTE> data;
+    DWORD dataLen;
+
+    DWORD toDWORD();
+    unsigned long long toQWORD();
+    std::string toString();
+    std::vector<std::string> toStringVector();
+    
+    std::string descriptionString();
+};
+
 class WinRegistryA {
 public:
-    struct WinRegistryValueA {
-        DWORD type; // REG_DWORD, REG_SZ, REG_BINARY, etc.
-        std::string name;
-        std::shared_ptr<BYTE> data;
-        DWORD dataLen;
-        
-        DWORD toDWORD();
-        unsigned long long toQWORD();
-        std::string toString();
-        std::vector<std::string> toStringVector();
-    };
-    
     static struct wow6464Key {} WOW6464KEY;
     static struct wow6432Key {} WOW6432KEY;
     
@@ -46,6 +48,11 @@ public:
     bool enumValueName(const std::string& key_abspath, std::vector<std::string>* out_value_name_list);
     // value_type = REG_DWORD, REG_SZ, REG_BINARY, etc.
     bool setValue(const std::string& key_abspath, const std::string& value_name, DWORD value_type, const BYTE* data, DWORD data_len);
+    bool setValueDWORD(const std::string& key_abspath, const std::string& value_name, const DWORD value);
+    bool setValueQWORD(const std::string& key_abspath, const std::string& value_name, const unsigned long long value);
+    bool setValueSZ(const std::string& key_abspath, const std::string& value_name, const std::string& value);
+    bool setValueExpandSZ(const std::string& key_abspath, const std::string& value_name, const std::string& value);
+    bool setValueMultiSZ(const std::string& key_abspath, const std::string& value_name, const std::vector<std::string>& value);
     bool getValue(const std::string& key_abspath, const std::string& value_name, WinRegistryValueA* out_value);
     bool removeValue(const std::string& key_abspath, const std::string& value_name);
 
