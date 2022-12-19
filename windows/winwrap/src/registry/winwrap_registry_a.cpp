@@ -70,11 +70,11 @@ WinRegistryA::WinRegistryA(wow6432Key) : isWow6464(false) {};
 
 WinRegistryA::~WinRegistryA() {};
 
-static bool SGStringStartsWith(const std::string& src, const std::string& prefix);
+static bool sStringStartsWithA(const std::string& src, const std::string& prefix);
 
 #define SAFE_REGCLOSEKEY(k) { if (k != NULL) { RegCloseKey(k); k = NULL; } }
 
-bool SGStringStartsWith(const std::string& src, const std::string& prefix) {
+bool sStringStartsWithA(const std::string& src, const std::string& prefix) {
     if (src.length() >= prefix.length()) {
         return (memcmp(src.c_str(), prefix.c_str(), prefix.length()) == 0);
     }
@@ -83,7 +83,7 @@ bool SGStringStartsWith(const std::string& src, const std::string& prefix) {
 
 std::string WinRegistryA::sanitizePath(const std::string& reg_path) {
     std::vector<char> char_list;
-    int idx = 0;
+    size_t idx = 0;
 
     for (idx = 0; idx < reg_path.length(); ++idx)
         if (reg_path[idx] != '\\')
@@ -511,61 +511,61 @@ bool WinRegistryA::disasWinRegAbsPath(const std::string& key_abspath, HKEY* out_
     HKEY hkey = NULL;
     size_t subkey_offset = 0;
 
-    if (SGStringStartsWith(key_abspath, "HKCR")) {
+    if (sStringStartsWithA(key_abspath, "HKCR")) {
         if (key_abspath[4] != '\0' && key_abspath[4] != '\\')
             return false;
         hkey = HKEY_CLASSES_ROOT;
         subkey_offset = 4;
     }
-    else if (SGStringStartsWith(key_abspath, "HKEY_CLASSES_ROOT")) {
+    else if (sStringStartsWithA(key_abspath, "HKEY_CLASSES_ROOT")) {
         if (key_abspath[17] != '\0' && key_abspath[17] != '\\')
             return false;
         hkey = HKEY_CLASSES_ROOT;
         subkey_offset = 17;
     }
-    else if (SGStringStartsWith(key_abspath, "HKCU")) {
+    else if (sStringStartsWithA(key_abspath, "HKCU")) {
         if (key_abspath[4] != '\0' && key_abspath[4] != '\\')
             return false;
         hkey = HKEY_CURRENT_USER;
         subkey_offset = 4;
     }
-    else if (SGStringStartsWith(key_abspath, "HKEY_CURRENT_USER")) {
+    else if (sStringStartsWithA(key_abspath, "HKEY_CURRENT_USER")) {
         if (key_abspath[17] != '\0' && key_abspath[17] != '\\')
             return false;
         hkey = HKEY_CURRENT_USER;
         subkey_offset = 17;
     }
-    else if (SGStringStartsWith(key_abspath, "HKLM")) {
+    else if (sStringStartsWithA(key_abspath, "HKLM")) {
         if (key_abspath[4] != '\0' && key_abspath[4] != '\\')
             return false;
         hkey = HKEY_LOCAL_MACHINE;
         subkey_offset = 4;
     }
-    else if (SGStringStartsWith(key_abspath, "HKEY_LOCAL_MACHINE")) {
+    else if (sStringStartsWithA(key_abspath, "HKEY_LOCAL_MACHINE")) {
         if (key_abspath[18] != '\0' && key_abspath[18] != '\\')
             return false;
         hkey = HKEY_LOCAL_MACHINE;
         subkey_offset = 18;
     }
-    else if (SGStringStartsWith(key_abspath, "HKU")) {
+    else if (sStringStartsWithA(key_abspath, "HKU")) {
         if (key_abspath[3] != '\0' && key_abspath[3] != '\\')
             return false;
         hkey = HKEY_USERS;
         subkey_offset = 3;
     }
-    else if (SGStringStartsWith(key_abspath, "HKEY_USERS")) {
+    else if (sStringStartsWithA(key_abspath, "HKEY_USERS")) {
         if (key_abspath[10] != '\0' && key_abspath[10] != '\\')
             return false;
         hkey = HKEY_USERS;
         subkey_offset = 10;
     }
-    else if (SGStringStartsWith(key_abspath, "HKCC")) {
+    else if (sStringStartsWithA(key_abspath, "HKCC")) {
         if (key_abspath[4] != '\0' && key_abspath[4] != '\\')
             return false;
         hkey = HKEY_CURRENT_CONFIG;
         subkey_offset = 4;
     }
-    else if (SGStringStartsWith(key_abspath, "HKEY_CURRENT_CONFIG")) {
+    else if (sStringStartsWithA(key_abspath, "HKEY_CURRENT_CONFIG")) {
         if (key_abspath[19] != '\0' && key_abspath[19] != '\\')
             return false;
         hkey = HKEY_CURRENT_CONFIG;

@@ -15,7 +15,8 @@ void WWWincryptEncryptFile(std::string src, std::string dst);
 void WWWincryptDecryptFile(std::string src, std::string dst);
 bool WWWincryptGenerateRandomFile(std::string path, size_t size);
 bool WWTestCompression();
-void WWTestRegistry();
+void WWTestRegistryA();
+void WWTestRegistryW();
 
 void print_usage(std::vector<std::string>& arg) {
     printf("Usage 1: %s fs\n", arg[0].c_str());
@@ -83,7 +84,7 @@ int main(int argc, char** argv) {
         WWTestCompression();
     }
     else if (arg.size() == 2 && arg[1] == "test_registry") {
-        WWTestRegistry();
+        WWTestRegistryW();
     }
     else {
         print_usage(arg);
