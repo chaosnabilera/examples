@@ -84,6 +84,7 @@ void echo_client(char* server_addr, char* server_port){
 
 			recvres = recv(sock_conn, recvbuf, recvbuflen, 0);
 			if ( recvres > 0 ){
+				recvbuf[recvres] = 0;
 				printf("recv(%d)> %s\n", recvres, recvbuf);
 			}
 			else if ( recvres == 0 ){
