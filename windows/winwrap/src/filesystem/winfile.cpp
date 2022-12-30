@@ -2,7 +2,8 @@
 
 #include "dprintf.hpp"
 
-using namespace std;
+// creates unnecessary warning at W4
+#pragma warning(disable:4706)
 
 WinFile::WinFile(HANDLE _hfile, std::wstring& _mode) : hFile(_hfile), mode(_mode) {
 
@@ -115,7 +116,7 @@ bool WinFile::readAll(std::shared_ptr<BYTE>* out_buf, long long* out_buflen) {
     bool result = false;
     long long cur_filesize = 0;
     BYTE* new_alloc = nullptr;
-    shared_ptr<BYTE> buf(nullptr);
+    std::shared_ptr<BYTE> buf(nullptr);
 
     long long curpos = 0;
     long long readcnt = 0;
@@ -130,7 +131,7 @@ bool WinFile::readAll(std::shared_ptr<BYTE>* out_buf, long long* out_buflen) {
             break;
         }
 
-        buf = shared_ptr<BYTE>(new_alloc, free);
+        buf = std::shared_ptr<BYTE>(new_alloc, free);
 
         if (!getPos(&curpos)) {
             dprintf("[WinFile::readAll] failed to get current position");

@@ -4,11 +4,11 @@
 #include <vector>
 #include <string>
 
-static const size_t DEFAULT_RAW_SIZE = 128 * 1024 * 1024;
+static const SIZE_T DEFAULT_RAW_SIZE = 128 * 1024 * 1024;
 
 bool WWTestCompression();
 bool WWTestCompressionAlgorithm(DWORD alg, const std::string& alg_name);
-bool WWCreateSemiRandomBuffer(std::shared_ptr<unsigned char>* buf, size_t buf_size);
+bool WWCreateSemiRandomBuffer(std::shared_ptr<unsigned char>* buf, SIZE_T buf_size);
 
 bool WWTestCompression() {
     std::vector<std::pair<DWORD, std::string>> test_list;
@@ -26,14 +26,14 @@ bool WWTestCompression() {
 
 bool WWTestCompressionAlgorithm(DWORD alg, const std::string& alg_name) {
     std::shared_ptr<unsigned char> raw;
-    size_t raw_size = DEFAULT_RAW_SIZE;
+    SIZE_T raw_size = DEFAULT_RAW_SIZE;
     std::shared_ptr<unsigned char> compressed;
-    size_t compressed_size = 0;
+    SIZE_T compressed_size = 0;
     std::shared_ptr<unsigned char> decompressed;
-    size_t decompressed_size = 0;
+    SIZE_T decompressed_size = 0;
 
-    double raw_size_total = 0;
-    double compressed_size_total = 0;
+    double raw_SIZE_Total = 0;
+    double compressed_SIZE_Total = 0;
 
     raw = std::shared_ptr<unsigned char>(new unsigned char[raw_size], std::default_delete<unsigned char[]>());
     
@@ -67,20 +67,20 @@ bool WWTestCompressionAlgorithm(DWORD alg, const std::string& alg_name) {
             return false;
         }
 
-        raw_size_total += raw_size;
-        compressed_size_total += compressed_size;
+        raw_SIZE_Total += raw_size;
+        compressed_SIZE_Total += compressed_size;
     }
 
-    printf("\n[WWTestCompressionAlgorithm] %12s: ratio = %.4lf (%10lf/%10lf)\n", alg_name.c_str(), compressed_size_total / raw_size_total, compressed_size_total, raw_size_total);
+    printf("\n[WWTestCompressionAlgorithm] %12s: ratio = %.4lf (%10lf/%10lf)\n", alg_name.c_str(), compressed_SIZE_Total / raw_SIZE_Total, compressed_SIZE_Total, raw_SIZE_Total);
 
     return true;
 }
 
-bool WWCreateSemiRandomBuffer(std::shared_ptr<unsigned char>* buf, size_t buf_size) {
+bool WWCreateSemiRandomBuffer(std::shared_ptr<unsigned char>* buf, SIZE_T buf_size) {
     BYTE rand_buf[3] = { 0 };
     char rand_char;
     unsigned short run_length;
-    size_t filled = 0;
+    SIZE_T filled = 0;
 
     while (filled < buf_size) {
         if (!WinCryptGenRandom(rand_buf, sizeof(rand_buf))) {

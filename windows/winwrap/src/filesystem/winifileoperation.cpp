@@ -6,7 +6,7 @@ bool WinIFileOperation::createWinIFileOperation(std::shared_ptr<WinIFileOperatio
     bool result = false;
     IFileOperation* fileOperation = nullptr;
     HRESULT hresult = E_UNEXPECTED;
-    IShellItem* shell_item = nullptr;
+    // IShellItem* shell_item = nullptr;
     DWORD clsctx = CLSCTX_ALL;
 
     do {

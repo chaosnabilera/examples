@@ -39,14 +39,14 @@
 class WinCompressBuffered {
 public:
     // convenience names
-    static bool compressXPRESS(const unsigned char* raw, size_t raw_size, std::shared_ptr<unsigned char>* out_compressed, size_t* out_compressed_size);
-    static bool compressXPRESS_HUF(const unsigned char* raw, size_t raw_size, std::shared_ptr<unsigned char>* out_compressed, size_t* out_compressed_size);
-    static bool compressMSZIP(const unsigned char* raw, size_t raw_size, std::shared_ptr<unsigned char>* out_compressed, size_t* out_compressed_size);
-    static bool compressLZMS(const unsigned char* raw, size_t raw_size, std::shared_ptr<unsigned char>* out_compressed, size_t* out_compressed_size);
-    static bool decompressXPRESS(const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size);
-    static bool decompressXPRESS_HUF(const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size);
-    static bool decompressMSZIP(const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size);
-    static bool decompressLZMS(const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size);
+    static bool compressXPRESS(const unsigned char* raw, SIZE_T raw_size, std::shared_ptr<unsigned char>* out_compressed, PSIZE_T out_compressed_size);
+    static bool compressXPRESS_HUF(const unsigned char* raw, SIZE_T raw_size, std::shared_ptr<unsigned char>* out_compressed, PSIZE_T out_compressed_size);
+    static bool compressMSZIP(const unsigned char* raw, SIZE_T raw_size, std::shared_ptr<unsigned char>* out_compressed, PSIZE_T out_compressed_size);
+    static bool compressLZMS(const unsigned char* raw, SIZE_T raw_size, std::shared_ptr<unsigned char>* out_compressed, PSIZE_T out_compressed_size);
+    static bool decompressXPRESS(const unsigned char* compressed, SIZE_T compressed_size, std::shared_ptr<unsigned char>* out_raw, PSIZE_T out_raw_size);
+    static bool decompressXPRESS_HUF(const unsigned char* compressed, SIZE_T compressed_size, std::shared_ptr<unsigned char>* out_raw, PSIZE_T out_raw_size);
+    static bool decompressMSZIP(const unsigned char* compressed, SIZE_T compressed_size, std::shared_ptr<unsigned char>* out_raw, PSIZE_T out_raw_size);
+    static bool decompressLZMS(const unsigned char* compressed, SIZE_T compressed_size, std::shared_ptr<unsigned char>* out_raw, PSIZE_T out_raw_size);
 
     /* actual implementation 
     * alg : 
@@ -55,8 +55,8 @@ public:
     *   - COMPRESS_ALGORITHM_MSZIP
     *   - COMPRESS_ALGORITHM_LZMS
     */
-    static bool compress(DWORD alg, const unsigned char* raw, size_t raw_size, std::shared_ptr<unsigned char>* out_compressed, size_t* out_compressed_size);
-    static bool decompress(DWORD alg, const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size);
+    static bool compress(DWORD alg, const unsigned char* raw, SIZE_T raw_size, std::shared_ptr<unsigned char>* out_compressed, PSIZE_T out_compressed_size);
+    static bool decompress(DWORD alg, const unsigned char* compressed, SIZE_T compressed_size, std::shared_ptr<unsigned char>* out_raw, PSIZE_T out_raw_size);
 private:
 };
 

@@ -5,29 +5,29 @@
 
 #include "dprintf.hpp"
 
-bool WinCompressBuffered::compressXPRESS(const unsigned char* raw, size_t raw_size, std::shared_ptr<unsigned char>* out_compressed, size_t* out_compressed_size) {
+bool WinCompressBuffered::compressXPRESS(const unsigned char* raw, SIZE_T raw_size, std::shared_ptr<unsigned char>* out_compressed, PSIZE_T out_compressed_size) {
     return compress(COMPRESS_ALGORITHM_XPRESS, raw, raw_size, out_compressed, out_compressed_size);
 }
 
-bool WinCompressBuffered::compressXPRESS_HUF(const unsigned char* raw, size_t raw_size, std::shared_ptr<unsigned char>* out_compressed, size_t* out_compressed_size) {
+bool WinCompressBuffered::compressXPRESS_HUF(const unsigned char* raw, SIZE_T raw_size, std::shared_ptr<unsigned char>* out_compressed, PSIZE_T out_compressed_size) {
     return compress(COMPRESS_ALGORITHM_XPRESS_HUFF, raw, raw_size, out_compressed, out_compressed_size);
 }
 
-bool WinCompressBuffered::compressMSZIP(const unsigned char* raw, size_t raw_size, std::shared_ptr<unsigned char>* out_compressed, size_t* out_compressed_size) {
+bool WinCompressBuffered::compressMSZIP(const unsigned char* raw, SIZE_T raw_size, std::shared_ptr<unsigned char>* out_compressed, PSIZE_T out_compressed_size) {
     return compress(COMPRESS_ALGORITHM_MSZIP, raw, raw_size, out_compressed, out_compressed_size);
 }
 
-bool WinCompressBuffered::compressLZMS(const unsigned char* raw, size_t raw_size, std::shared_ptr<unsigned char>* out_compressed, size_t* out_compressed_size) {
+bool WinCompressBuffered::compressLZMS(const unsigned char* raw, SIZE_T raw_size, std::shared_ptr<unsigned char>* out_compressed, PSIZE_T out_compressed_size) {
     return compress(COMPRESS_ALGORITHM_LZMS, raw, raw_size, out_compressed, out_compressed_size);
 }
 
-bool WinCompressBuffered::compress(DWORD alg, const unsigned char* raw, size_t raw_size, std::shared_ptr<unsigned char>* out_compressed, size_t* out_compressed_size) {
+bool WinCompressBuffered::compress(DWORD alg, const unsigned char* raw, SIZE_T raw_size, std::shared_ptr<unsigned char>* out_compressed, PSIZE_T out_compressed_size) {
     bool result = false;
     COMPRESSOR_HANDLE compressor = NULL;
     DWORD getlasterror = 0;
     std::shared_ptr<unsigned char> compressed_buf;
-    size_t compressed_buf_len = 0;
-    size_t compress_result_len = 0;
+    SIZE_T compressed_buf_len = 0;
+    SIZE_T compress_result_len = 0;
 
     do {
         if (!CreateCompressor(alg, nullptr, &compressor)) {
@@ -62,29 +62,29 @@ bool WinCompressBuffered::compress(DWORD alg, const unsigned char* raw, size_t r
     return result;
 }
 
-bool WinCompressBuffered::decompressXPRESS(const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size) {
+bool WinCompressBuffered::decompressXPRESS(const unsigned char* compressed, SIZE_T compressed_size, std::shared_ptr<unsigned char>* out_raw, PSIZE_T out_raw_size) {
     return decompress(COMPRESS_ALGORITHM_XPRESS, compressed, compressed_size, out_raw, out_raw_size);
 }
 
-bool WinCompressBuffered::decompressXPRESS_HUF(const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size) {
+bool WinCompressBuffered::decompressXPRESS_HUF(const unsigned char* compressed, SIZE_T compressed_size, std::shared_ptr<unsigned char>* out_raw, PSIZE_T out_raw_size) {
     return decompress(COMPRESS_ALGORITHM_XPRESS_HUFF, compressed, compressed_size, out_raw, out_raw_size);
 }
 
-bool WinCompressBuffered::decompressMSZIP(const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size) {
+bool WinCompressBuffered::decompressMSZIP(const unsigned char* compressed, SIZE_T compressed_size, std::shared_ptr<unsigned char>* out_raw, PSIZE_T out_raw_size) {
     return decompress(COMPRESS_ALGORITHM_MSZIP, compressed, compressed_size, out_raw, out_raw_size);
 }
 
-bool WinCompressBuffered::decompressLZMS(const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size) {
+bool WinCompressBuffered::decompressLZMS(const unsigned char* compressed, SIZE_T compressed_size, std::shared_ptr<unsigned char>* out_raw, PSIZE_T out_raw_size) {
     return decompress(COMPRESS_ALGORITHM_LZMS, compressed, compressed_size, out_raw, out_raw_size);
 }
 
-bool WinCompressBuffered::decompress(DWORD alg, const unsigned char* compressed, size_t compressed_size, std::shared_ptr<unsigned char>* out_raw, size_t* out_raw_size) {
+bool WinCompressBuffered::decompress(DWORD alg, const unsigned char* compressed, SIZE_T compressed_size, std::shared_ptr<unsigned char>* out_raw, PSIZE_T out_raw_size) {
     bool result = false;
     DECOMPRESSOR_HANDLE decompressor = NULL;
     DWORD getlasterror = 0;
     std::shared_ptr<unsigned char> decompressed_buf;
-    size_t decompressed_buf_len = 0;
-    size_t decompress_result_len = 0;
+    SIZE_T decompressed_buf_len = 0;
+    SIZE_T decompress_result_len = 0;
 
     do {
         if (!CreateDecompressor(alg, nullptr, &decompressor)) {

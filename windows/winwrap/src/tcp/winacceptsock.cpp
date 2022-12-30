@@ -58,7 +58,7 @@ WinSock* WinAcceptSock::acceptBlock() {
 
 bool WinAcceptSock::acceptNonblock(WinSock*& res) {
     SOCKET sock_client = INVALID_SOCKET;
-    WinSock* winsock = nullptr;
+    // WinSock* winsock = nullptr;
     bool success = false;
     char client_addr[sizeof(sockaddr_in6)];
     int client_addr_len = sizeof(client_addr);

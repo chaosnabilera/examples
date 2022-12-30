@@ -6,6 +6,9 @@
 #include "dprintf.hpp"
 #include "winwrap_filesystem.h"
 
+// creates unnecessary warning at W4
+#pragma warning(disable:4706)
+
 static bool shellSrcDstCommonOperationA(UINT op, std::string& src, std::string& dst, bool overwrite);
 static bool shellSrcDstCommonOperationW(UINT op, std::wstring& src, std::wstring& dst, bool overwrite);
 
