@@ -1,0 +1,2 @@
+- loadlibrary.x86.exe, loadlibrary.x64.exe를 이용하면 dll을 로드할 수 있음
+- dll 비트에 맞춰서 실행할 것
