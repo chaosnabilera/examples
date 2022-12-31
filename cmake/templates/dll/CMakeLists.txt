@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(template_exe VERSION 1.0.0 LANGUAGES CXX)
+project(template_dll VERSION 1.0.0 LANGUAGES CXX)
 
 #
 # Use following if this project is MSVC-only
@@ -36,19 +36,19 @@ message("PRJ_COMPILER_OPTION = ${PRJ_COMPILER_OPTION}")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # manage source files with variables
-set(SRC_EXE 
+set(SRC_DLL 
     src/main.cpp 
     src/module.cpp)
 
-set(INCLUDE_EXE include)
+set(INCLUDE_DLL include)
 
-set(LIB_EXE "") # if any *.lib is required
+set(LIB_DLL "") # if any *.lib is required
 
-add_executable(template_exe ${SRC_EXE})
+add_library(template_dll SHARED ${SRC_DLL})
 
-# setting mode to PRIVATE would be more appropriate for exe in most cases
+# setting mode to PRIVATE would be more appropriate for dll in most cases
 # consult cmake manual for detail
-target_include_directories(template_exe PRIVATE ${INCLUDE_EXE})
-target_compile_options(template_exe PRIVATE ${PRJ_COMPILER_OPTION})
-target_link_libraries(template_exe PRIVATE ${LIB_EXE})
+target_include_directories(template_dll PRIVATE ${INCLUDE_DLL})
+target_compile_options(template_dll PRIVATE ${PRJ_COMPILER_OPTION})
+target_link_libraries(template_dll PRIVATE ${LIB_DLL})
 

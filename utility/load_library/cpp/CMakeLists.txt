@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(template_exe VERSION 1.0.0 LANGUAGES CXX)
+project(loadlibrary VERSION 1.0.0 LANGUAGES CXX)
 
 #
 # Use following if this project is MSVC-only
@@ -37,18 +37,17 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # manage source files with variables
 set(SRC_EXE 
-    src/main.cpp 
-    src/module.cpp)
+    src/main.cpp)
 
 set(INCLUDE_EXE include)
 
 set(LIB_EXE "") # if any *.lib is required
 
-add_executable(template_exe ${SRC_EXE})
+add_executable(loadlibrary ${SRC_EXE})
 
 # setting mode to PRIVATE would be more appropriate for exe in most cases
 # consult cmake manual for detail
-target_include_directories(template_exe PRIVATE ${INCLUDE_EXE})
-target_compile_options(template_exe PRIVATE ${PRJ_COMPILER_OPTION})
-target_link_libraries(template_exe PRIVATE ${LIB_EXE})
+target_include_directories(loadlibrary PRIVATE ${INCLUDE_EXE})
+target_compile_options(loadlibrary PRIVATE ${PRJ_COMPILER_OPTION})
+target_link_libraries(loadlibrary PRIVATE ${LIB_EXE})
 
